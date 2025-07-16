@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dieta na Ponta do Lápis - Controle Nutricional Completo</title>
+    <meta name="description" content="Controle nutricional completo para seus objetivos de saúde e bem-estar. Acompanhe calorias, macronutrientes, peso e medidas.">
+    <meta name="keywords" content="dieta, nutrição, controle calórico, macronutrientes, emagrecer, ganhar massa, saúde, bem-estar, fitness">
+    <meta name="author" content="BLACKBOX.AI Assistant">
+    <!-- Favicon e Apple Touch Icon em SVG inline para evitar requisições HTTP adicionais -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍎</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍎</text></svg>">
+    
+    <!-- PWA related meta tags para uma experiência de app-like -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4CAF50">
+
+    <!-- Tailwind CSS CDN - Para projetos maiores, considerar compilar o Tailwind para purgar o CSS não utilizado -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js e plugins CDN - Carregamento deferido para não bloquear o render inicial -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" defer></script>
+
+    <style>
+        /* Base styles for tab content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Keyframe for fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Nutrition circles for macro display */
+        .nutrition-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            touch-action: manipulation; /* Melhora a responsividade em dispositivos de toque */
+        }
+        .nutrition-circle:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Progress bars for daily tracking */
+        .progress-bar {
+            height: 16px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #e0e0e0;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease-out, background-color 0.3s ease;
+            border-radius: 8px;
+        }
+        .progress-fill.over-target {
+            background-color: #ef4444; /* Vermelho para quando excede o alvo */
+        }
+
+        /* Pulse animation for progress bars */
+        .animate-pulse-custom {
+            animation: pulse-custom 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+        @keyframes pulse-custom {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Loading spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50; /* Green-500 */
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 6px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Feedback stars */
+        .star-btn {
+            cursor: pointer;
+            transition: transform 0.2s ease, color 0.2s ease;
+            touch-action: manipulation; /* Melhora a responsividade em dispositivos de toque */
+        }
+        .star-btn:hover {
+            transform: scale(1.2);
+        }
+        .star-btn.selected {
+            color: #FFD700; /* Gold */
+        }
+
+        /* Custom scrollbar for tables */
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 8px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #a5d6a7; /* Light Green */
+            border-radius: 10px;
+        }
+        .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+            background: #81c784; /* Medium Green */
+        }
+
+        /* Estilos para a nova seção de obstáculos/soluções (mantido para referência, mas removido do HTML) */
+        .solution-card {
+            background-color: #e8f5e9; /* Green-50 */
+            border-left: 4px solid #4CAF50; /* Green-500 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .solution-card h5 {
+            color: #2E7D32; /* Green-800 */
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .solution-card p {
+            color: #424242; /* Grey-800 */
+        }
+
+        /* Mobile-specific adjustments */
+        @media (max-width: 767px) {
+            .container {
+                padding: 1rem;
+            }
+            header h1 {
+                font-size: 2.5rem;
+            }
+            header p {
+                font-size: 1rem;
+            }
+            .tab-btn {
+                flex-grow: 1;
+                text-align: center;
+                margin-bottom: 0.5rem;
+                padding: 0.75rem 0.5rem; /* Área de toque maior */
+                font-size: 0.9rem;
+            }
+            .grid-cols-1\.5-mobile {
+                grid-template-columns: 1fr 1.5fr;
+            }
+            .nutrition-circle {
+                width: 100px;
+                height: 100px;
+                font-size: 0.9rem;
+            }
+            .nutrition-circle .text-3xl {
+                font-size: 2rem;
+            }
+            .nutrition-circle .text-sm {
+                font-size: 0.75rem;
+            }
+            .progress-bar {
+                height: 12px;
+            }
+            .daily-summary-grid {
+                grid-template-columns: 1fr;
+            }
+            .daily-summary-grid > div {
+                padding: 0.75rem;
+            }
+            .daily-summary-grid .font-bold {
+                font-size: 1.1rem;
+            }
+            .daily-summary-grid .text-sm {
+                font-size: 0.8rem;
+            }
+            .add-meal-form-grid {
+                grid-template-columns: 1fr;
+            }
+            .add-meal-form-grid > div {
+                margin-bottom: 1rem;
+            }
+            .add-meal-form-grid .flex {
+                flex-direction: row; /* Manter quantidade e unidade na mesma linha */
+            }
+            .add-meal-form-grid button {
+                width: 100%;
+                padding: 0.75rem 1rem; /* Área de toque maior */
+            }
+            .daily-meals-table th, .daily-meals-table td {
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+            .daily-meals-table .text-sm {
+                font-size: 0.7rem;
+            }
+            .daily-meals-table .text-xs {
+                font-size: 0.6rem;
+            }
+            .daily-meals-table button {
+                font-size: 0.7rem;
+            }
+            .meal-template-form-grid, .measurements-form-grid {
+                grid-template-columns: 1fr;
+            }
+            .meal-template-form-grid > div, .measurements-form-grid > div {
+                margin-bottom: 1rem;
+            }
+            .measurements-history-table th, .measurements-history-table td {
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+            .measurements-history-table .text-sm {
+                font-size: 0.7rem;
+            }
+            .measurements-history-table button {
+                font-size: 0.7rem;
+            }
+            .journal-textarea {
+                height: 100px;
+            }
+            .obstacles-select {
+                height: 150px;
+            }
+
+            /* Garantir que os inputs de formulário sejam grandes o suficiente para toque */
+            input[type="text"],
+            input[type="number"],
+            input[type="date"],
+            select,
+            textarea {
+                min-height: 48px; /* Tamanho de alvo de toque recomendado */
+                padding: 0.75rem;
+            }
+        }
+
+        /* Custom styles for better table display on mobile */
+        @media (max-width: 767px) {
+            .responsive-table {
+                border: 0;
+            }
+            .responsive-table thead {
+                display: none;
+            }
+            .responsive-table tr {
+                display: block;
+                margin-bottom: 0.625em;
+                border: 1px solid #ddd;
+                border-radius: 0.5rem;
+                background-color: #fff;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            .responsive-table td {
+                display: block;
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border-bottom: 1px solid #eee;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0;
+                width: 45%;
+                padding-left: 10px;
+                font-weight: bold;
+                text-align: left;
+                color: #4A5568;
+            }
+            .responsive-table td:last-child {
+                border-bottom: 0;
+            }
+        }
+
+        /* General button styling for better touch feedback */
+        button {
+            -webkit-tap-highlight-color: transparent; /* Remove o destaque de toque padrão no iOS */
+            touch-action: manipulation; /* Previne o zoom de duplo toque */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+    <div class="container mx-auto p-4 max-w-6xl">
+        <header class="bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl shadow-lg p-6 mb-6 transform transition-all duration-300 hover:scale-[1.01]">
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight mb-2 text-center">Dieta na Ponta do Lápis</h1>
+            <p class="text-lg md:text-xl opacity-90 text-center">Seu controle nutricional completo para alcançar seus objetivos de forma inteligente.</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-2 mb-6 bg-white rounded-xl shadow-md p-3 overflow-x-auto" role="tablist">
+            <button class="tab-btn px-4 py-2 rounded-lg text-green-700 bg-green-100 font-semibold hover:bg-green-200 transition-colors duration-200 whitespace-nowrap" data-tab="dados-pessoais" role="tab" aria-selected="true" aria-controls="dados-pessoais-panel">Dados Pessoais</button>
+            <button class="tab-btn px-4 py-2 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 font-medium transition-colors duration-200 whitespace-nowrap" data-tab="controle-diario" role="tab" aria-selected="false" aria-controls="controle-diario-panel">Diário Alimentar</button>
+            <button class="tab-btn px-4 py-2 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 font-medium transition-colors duration-200 whitespace-nowrap" data-tab="refeicoes" role="tab" aria-selected="false" aria-controls="refeicoes-panel">Planejamento de Refeições</button>
+            <button class="tab-btn px-4 py-2 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 font-medium transition-colors duration-200 whitespace-nowrap" data-tab="evolucao" role="tab" aria-selected="false" aria-controls="evolucao-panel">Evolução</button>
+            <button class="tab-btn px-4 py-2 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 font-medium transition-colors duration-200 whitespace-nowrap" data-tab="diario" role="tab" aria-selected="false" aria-controls="diario-panel">Diário</button>
+            <button class="tab-btn px-4 py-2 rounded-lg text-gray-700 hover:bg-green-50 hover:text-green-600 font-medium transition-colors duration-200 whitespace-nowrap" data-tab="feedback" role="tab" aria-selected="false" aria-controls="feedback-panel">Feedback</button>
+        </nav>
+
+        <main>
+            <!-- Aba Dados Pessoais -->
+            <section id="dados-pessoais" class="tab-content bg-white rounded-xl shadow-md p-4 md:p-6 active" role="tabpanel" aria-labelledby="dados-pessoais-tab">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-green-700 border-b pb-2 md:pb-3 border-green-100">Seu Perfil Nutricional</h2>
+                
+                <form id="personal-data-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    <div>
+                        <label for="name" class="block text-gray-700 font-medium mb-1 md:mb-2">Nome (opcional)</label>
+                        <input type="text" id="name" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200" placeholder="Seu nome">
+                    </div>
+                    
+                    <div>
+                        <label for="gender" class="block text-gray-700 font-medium mb-1 md:mb-2">Sexo</label>
+                        <select id="gender" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200">
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="age" class="block text-gray-700 font-medium mb-1 md:mb-2">Idade</label>
+                        <input type="number" id="age" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200" placeholder="Ex: 30">
+                    </div>
+                    
+                    <div>
+                        <label for="height" class="block text-gray-700 font-medium mb-1 md:mb-2">Altura (cm)</label>
+                        <input type="number" id="height" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200" placeholder="Ex: 175">
+                    </div>
+                    
+                    <div>
+                        <label for="weight" class="block text-gray-700 font-medium mb-1 md:mb-2">Peso atual (kg)</label>
+                        <input type="number" id="weight" step="0.1" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200" placeholder="Ex: 70.5">
+                    </div>
+                    
+                    <div>
+                        <label for="activity" class="block text-gray-700 font-medium mb-1 md:mb-2">Nível de atividade física</label>
+                        <select id="activity" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200">
+                            <option value="1.2">Sedentário (pouco ou nenhum exercício)</option>
+                            <option value="1.375">Leve (exercício leve 1-2 dias/semana)</option>
+                            <option value="1.55">Moderado (exercício moderado 3-5 dias/semana)</option>
+                            <option value="1.725">Intenso (exercício intenso 6-7 dias/semana)</option>
+                            <option value="1.9">Muito intenso (exercício muito intenso e trabalho físico)</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="goal" class="block text-gray-700 font-medium mb-1 md:mb-2">Objetivo</label>
+                        <select id="goal" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200">
+                            <option value="-0.2">Emagrecer</option>
+                            <option value="0">Manter</option>
+                            <option value="0.15">Ganhar Massa</option>
+                        </select>
+                    </div>
+                    <div id="protein-percentage-div">
+                        <label for="protein-percentage" class="block text-gray-700 font-medium mb-1 md:mb-2">% Proteína (padrão: 30%)</label>
+                        <input type="number" id="protein-percentage" value="30" min="0" max="100" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200">
+                    </div>
+                    <div id="carbs-percentage-div">
+                        <label for="carbs-percentage" class="block text-gray-700 font-medium mb-1 md:mb-2">% Carboidratos (padrão: 45%)</label>
+                        <input type="number" id="carbs-percentage" value="45" min="0" max="100" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200">
+                    </div>
+                    <div id="fat-percentage-div">
+                        <label for="fat-percentage" class="block text-gray-700 font-medium mb-1 md:mb-2">% Gordura (padrão: 25%)</label>
+                        <input type="number" id="fat-percentage" value="25" min="0" max="100" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200">
+                    </div>
+                    
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 flex justify-center mt-2 md:mt-4">
+                        <button type="button" id="calculate-btn" class="bg-green-600 text-white px-6 py-2 md:px-8 md:py-3 rounded-lg font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-md" aria-label="Calcular Meu Perfil Nutricional">
+                            Calcular Meu Perfil
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="results" class="mt-8 md:mt-10 p-4 md:p-6 bg-green-50 rounded-xl shadow-inner hidden">
+                    <h3 class="text-xl md:text-2xl font-bold mb-4 md:mb-5 text-green-700 border-b pb-2 md:pb-3 border-green-200">Resultados do Perfil Nutricional</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+                        <div class="bg-white p-4 md:p-5 rounded-lg shadow-sm text-center transform transition-transform hover:scale-105">
+                            <h4 class="font-semibold text-gray-700 mb-1 md:mb-2 text-base md:text-lg">Taxa Metabólica Basal (TMB)</h4>
+                            <p id="tmb-result" class="text-3xl md:text-4xl font-extrabold text-green-600">0</p>
+                            <p class="text-xs md:text-sm text-gray-500">Calorias/dia em repouso</p>
+                        </div>
+                        
+                        <div class="bg-white p-4 md:p-5 rounded-lg shadow-sm text-center transform transition-transform hover:scale-105">
+                            <h4 class="font-semibold text-gray-700 mb-1 md:mb-2 text-base md:text-lg">Gasto Calórico Total (TDEE)</h4>
+                            <p id="tdee-result" class="text-3xl md:text-4xl font-extrabold text-green-600">0</p>
+                            <p class="text-xs md:text-sm text-gray-500">Calorias/dia considerando atividade</p>
+                        </div>
+                        
+                        <div class="bg-white p-4 md:p-5 rounded-lg shadow-sm text-center transform transition-transform hover:scale-105">
+                            <h4 class="font-semibold text-gray-700 mb-1 md:mb-2 text-base md:text-lg">Meta Diária</h4>
+                            <p id="goal-result" class="text-3xl md:text-4xl font-extrabold text-green-600">0</p>
+                            <p id="goal-text" class="text-xs md:text-sm text-gray-500">Calorias/dia para seu objetivo</p>
+                        </div>
+                    </div>
+                    
+                    <h4 class="font-bold text-lg md:text-xl mb-3 md:mb-4 text-green-700 border-b pb-2 md:pb-3 border-green-200">Distribuição de Macronutrientes</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+                        <div class="nutrition-circle bg-red-100 text-red-700">
+                            <div class="text-sm md:text-base font-medium">Proteínas</div>
+                            <div id="protein-grams" class="text-2xl md:text-3xl font-bold">0g</div>
+                            <div id="protein-kcal" class="text-xs md:text-sm">0 kcal</div>
+                        </div>
+                        
+                        <div class="nutrition-circle bg-blue-100 text-blue-700">
+                            <div class="text-sm md:text-base font-medium">Carboidratos</div>
+                            <div id="carbs-grams" class="text-2xl md:text-3xl font-bold">0g</div>
+                            <div id="carbs-kcal" class="text-xs md:text-sm">0 kcal</div>
+                        </div>
+                        
+                        <div class="nutrition-circle bg-yellow-100 text-yellow-700">
+                            <div class="text-sm md:text-base font-medium">Gorduras</div>
+                            <div id="fat-grams" class="text-2xl md:text-3xl font-bold">0g</div>
+                            <div id="fat-kcal" class="text-xs md:text-sm">0 kcal</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-4 md:p-5 rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Proporção de Macronutrientes</h4>
+                        <canvas id="macroChart" height="100"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Aba Controle Diário -->
+            <section id="controle-diario" class="tab-content bg-white rounded-xl shadow-md p-4 md:p-6" role="tabpanel" aria-labelledby="controle-diario-tab">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-green-700 border-b pb-2 md:pb-3 border-green-100">Registro Diário Alimentar</h2>
+                
+                <div class="mb-6 md:mb-8 bg-green-50 p-3 md:p-4 rounded-lg shadow-sm">
+                    <div class="flex flex-col md:flex-row items-center justify-between mb-3 md:mb-4">
+                        <div class="mb-2 md:mb-0">
+                            <span class="block text-sm text-gray-600">Dia Atual</span>
+                            <span id="current-date" class="font-semibold text-base md:text-lg text-green-800">Carregando...</span>
+                        </div>
+                        <div>
+                            <label for="date-input" class="sr-only">Selecionar Data</label>
+                            <input type="date" id="date-input" class="p-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:ring-2 focus:ring-green-400 transition-all duration-200">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 daily-summary-grid">
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <div class="text-sm text-green-800 font-medium">Calorias</div>
+                            <div class="font-bold text-lg"><span id="current-calories">0</span>/<span id="target-calories">0</span> kcal</div>
+                            <div class="progress-bar mt-2">
+                                <div id="calories-progress" class="progress-fill bg-green-500"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <div class="text-sm text-red-800 font-medium">Proteínas</div>
+                            <div class="font-bold text-lg"><span id="current-protein">0</span>/<span id="target-protein">0</span> g</div>
+                            <div class="progress-bar mt-2">
+                                <div id="protein-progress" class="progress-fill bg-red-500"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <div class="text-sm text-blue-800 font-medium">Carboidratos</div>
+                            <div class="font-bold text-lg"><span id="current-carbs">0</span>/<span id="target-carbs">0</span> g</div>
+                            <div class="progress-bar mt-2">
+                                <div id="carbs-progress" class="progress-fill bg-blue-500"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <div class="text-sm text-yellow-800 font-medium">Gorduras</div>
+                            <div class="font-bold text-lg"><span id="current-fat">0</span>/<span id="target-fat">0</span> g</div>
+                            <div class="progress-bar mt-2">
+                                <div id="fat-progress" class="progress-fill bg-yellow-500"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-green-700 border-b pb-1 md:pb-2 border-green-100">Adicionar Refeição</h3>
+                <form id="add-meal-form" class="mb-6 md:mb-8 p-3 md:p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4 add-meal-form-grid">
+                        <div>
+                            <label for="meal-type" class="block text-gray-700 font-medium mb-1 text-sm">Tipo de Refeição</label>
+                            <select id="meal-type" class="w-full p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-green-400 transition-all duration-200">
+                                <option>Café da Manhã</option>
+                                <option>Lanche da Manhã</option>
+                                <option>Almoço</option>
+                                <option>Lanche da Tarde</option>
+                                <option>Jantar</option>
+                                <option>Ceia</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="food-name" class="block text-gray-700 font-medium mb-1 text-sm">Alimento</label>
+                            <input type="text" id="food-name" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: Frango grelhado">
+                        </div>
+                        
+                        <div>
+                            <label for="food-quantity" class="block text-gray-700 font-medium mb-1 text-sm">Quantidade</label>
+                            <div class="flex">
+                                <input type="number" id="food-quantity" class="w-3/4 p-2 border border-gray-300 rounded-l-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="100">
+                                <select id="quantity-unit" class="w-1/4 p-2 border border-gray-300 rounded-r-md bg-white focus:ring-2 focus:ring-green-400 transition-all duration-200">
+                                    <option value="g">g</option>
+                                    <option value="ml">ml</option>
+                                    <option value="un">un</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row items-end gap-2">
+                            <button type="button" id="add-food-btn" class="w-full bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-md flex items-center justify-center" aria-label="Adicionar Alimento">
+                                Adicionar <span id="add-food-loader" class="loader hidden"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <h3 class="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-green-700 border-b pb-1 md:pb-2 border-green-100">Refeições do Dia</h3>
+                <div id="daily-meals" class="mb-6 md:mb-8">
+                    <!-- Conteúdo das refeições diárias será carregado aqui -->
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Distribuição por Refeição</h4>
+                        <canvas id="mealsChart" height="200"></canvas>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Distribuição de Macronutrientes</h4>
+                        <canvas id="dailyMacroChart" height="200"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Aba Refeições -->
+            <section id="refeicoes" class="tab-content bg-white rounded-xl shadow-md p-4 md:p-6" role="tabpanel" aria-labelledby="refeicoes-tab">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-green-700 border-b pb-2 md:pb-3 border-green-100">Planejamento de Refeições</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="bg-green-50 p-4 md:p-5 rounded-lg shadow-sm">
+                        <h3 class="text-xl font-bold mb-3 md:mb-4 text-green-700">Criar Nova Refeição (Template)</h3>
+                        <form id="meal-template-form" class="space-y-3 md:space-y-4 meal-template-form-grid">
+                            <div>
+                                <label for="meal-type-template" class="block text-gray-700 font-medium mb-1 text-sm">Tipo de Refeição</label>
+                                <select id="meal-type-template" class="w-full p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-green-400 transition-all duration-200">
+                                    <option value="Café da Manhã">Café da Manhã</option>
+                                    <option value="Lanche da Manhã">Lanche da Manhã</option>
+                                    <option value="Almoço">Almoço</option>
+                                    <option value="Lanche da Tarde">Lanche da Tarde</option>
+                                    <option value="Jantar">Jantar</option>
+                                    <option value="Ceia">Ceia</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="meal-name-template" class="block text-gray-700 font-medium mb-1 text-sm">Nome da Refeição</label>
+                                <input type="text" id="meal-name-template" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: Omelete com vegetais">
+                            </div>
+                            
+                            <button type="button" id="add-meal-template-btn" class="w-full bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-md" aria-label="Criar Template de Refeição">
+                                Criar Template de Refeição
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-bold mb-3 md:mb-4 text-green-700">Meus Templates de Refeição</h3>
+                        <div id="meal-cards" class="grid grid-cols-1 gap-4">
+                            <div class="border border-dashed border-gray-300 rounded-lg p-6 md:p-8 text-center text-gray-500">
+                                <p>Nenhum template de refeição criado ainda.</p>
+                                <p class="text-sm mt-2">Use o formulário ao lado para começar!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
+                    <h3 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Distribuição de Calorias por Refeição (Histórico)</h3>
+                    <canvas id="mealDistributionChart" height="150"></canvas>
+                </div>
+            </section>
+
+            <!-- Aba Evolução -->
+            <section id="evolucao" class="tab-content bg-white rounded-xl shadow-md p-4 md:p-6" role="tabpanel" aria-labelledby="evolucao-tab">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-green-700 border-b pb-2 md:pb-3 border-green-100">Evolução de Peso e Medidas</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="bg-green-50 p-4 md:p-5 rounded-lg shadow-sm">
+                        <h3 class="text-xl font-bold mb-3 md:mb-4 text-green-700">Registrar Novas Medidas</h3>
+                        <form id="measurements-form" class="space-y-3 md:space-y-4 measurements-form-grid">
+                            <div>
+                                <label for="measurement-date" class="block text-gray-700 font-medium mb-1 text-sm">Data</label>
+                                <input type="date" id="measurement-date" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200">
+                            </div>
+                            
+                            <div>
+                                <label for="measurement-weight" class="block text-gray-700 font-medium mb-1 text-sm">Peso (kg)</label>
+                                <input type="number" step="0.1" id="measurement-weight" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: 70.0">
+                            </div>
+                            
+                            <div>
+                                <label for="measurement-waist" class="block text-gray-700 font-medium mb-1 text-sm">Cintura (cm)</label>
+                                <input type="number" step="0.1" id="measurement-waist" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: 80.0">
+                            </div>
+                            
+                            <div>
+                                <label for="measurement-abdomen" class="block text-gray-700 font-medium mb-1 text-sm">Abdômen (cm)</label>
+                                <input type="number" step="0.1" id="measurement-abdomen" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: 85.0">
+                            </div>
+                            
+                            <div>
+                                <label for="measurement-hip" class="block text-gray-700 font-medium mb-1 text-sm">Quadril (cm)</label>
+                                <input type="number" step="0.1" id="measurement-hip" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: 95.0">
+                            </div>
+                            
+                            <div>
+                                <label for="measurement-arm" class="block text-gray-700 font-medium mb-1 text-sm">Braço (cm)</label>
+                                <input type="number" step="0.1" id="measurement-arm" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: 30.0">
+                            </div>
+                            
+                            <div>
+                                <label for="measurement-thigh" class="block text-gray-700 font-medium mb-1 text-sm">Coxa (cm)</label>
+                                <input type="number" step="0.1" id="measurement-thigh" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: 50.0">
+                            </div>
+                            
+                            <div>
+                                <label for="measurement-chest" class="block text-gray-700 font-medium mb-1 text-sm">Peitoral (cm - opcional)</label>
+                                <input type="number" step="0.1" id="measurement-chest" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: 90.0">
+                            </div>
+                            
+                            <div class="col-span-full">
+                                <button type="button" id="save-measurement-btn" class="w-full bg-green-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-md" aria-label="Registrar Medidas">
+                                    Registrar Medidas
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
+                        <h3 class="text-xl font-bold mb-3 md:mb-4 text-green-700">Evolução do Peso</h3>
+                        <canvas id="weightChart" height="250"></canvas>
+                    </div>
+                </div>
+                
+                <h3 class="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-green-700 border-b pb-1 md:pb-2 border-green-100">Histórico de Medições</h3>
+                <div class="overflow-x-auto mb-6 md:mb-8 rounded-lg border border-gray-200 shadow-sm">
+                    <table class="w-full min-w-[700px] bg-white responsive-table">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-3 border-b text-left text-sm font-semibold text-gray-600">Data</th>
+                                <th class="p-3 border-b text-left text-sm font-semibold text-gray-600">Peso (kg)</th>
+                                <th class="p-3 border-b text-left text-sm font-semibold text-gray-600">Cintura (cm)</th>
+                                <th class="p-3 border-b text-left text-sm font-semibold text-gray-600">Abdômen (cm)</th>
+                                <th class="p-3 border-b text-left text-sm font-semibold text-gray-600">Quadril (cm)</th>
+                                <th class="p-3 border-b text-left text-sm font-semibold text-gray-600">Braço (cm)</th>
+                                <th class="p-3 border-b text-left text-sm font-semibold text-gray-600">Coxa (cm)</th>
+                                <th class="p-3 border-b text-left text-sm font-semibold text-gray-600">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="measurements-history">
+                            <tr>
+                                <td colspan="8" class="p-4 text-center text-gray-500">Nenhuma medição registrada</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Evolução da Cintura</h4>
+                        <canvas id="waistChart" height="200"></canvas>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Evolução do Abdômen</h4>
+                        <canvas id="abdomenChart" height="200"></canvas>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
+                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Evolução do Quadril</h4>
+                        <canvas id="hipChart" height="200"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Aba Diário -->
+            <section id="diario" class="tab-content bg-white rounded-xl shadow-md p-4 md:p-6" role="tabpanel" aria-labelledby="diario-tab">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-green-700 border-b pb-2 md:pb-3 border-green-100">Diário de Consistência e Reflexão</h2>
+                
+                <div class="mb-4 md:mb-6 p-3 md:p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <label for="journal-date" class="block text-gray-700 font-medium mb-1 text-sm">Data do Registro</label>
+                    <input type="date" id="journal-date" class="w-full p-2 border border-gray-300 rounded-md max-w-xs focus:ring-2 focus:ring-green-400 transition-all duration-200">
+                </div>
+                
+                <div class="mb-4 md:mb-6">
+                    <label for="journal-good" class="block text-gray-700 font-medium mb-1 md:mb-2">O que fiz bem essa semana?</label>
+                    <textarea id="journal-good" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg h-24 md:h-28 resize-y focus:ring-2 focus:ring-green-400 transition-all duration-200 journal-textarea" placeholder="Ex: Consegui seguir meu plano alimentar todos os dias, treinei 5x na semana."></textarea>
+                </div>
+                
+                <div class="mb-4 md:mb-6">
+                    <label for="journal-improve" class="block text-gray-700 font-medium mb-1 md:mb-2">O que posso melhorar?</label>
+                    <textarea id="journal-improve" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg h-24 md:h-28 resize-y focus:ring-2 focus:ring-green-400 transition-all duration-200 journal-textarea" placeholder="Ex: Preciso beber mais água, evitar lanches noturnos."></textarea>
+                </div>
+                
+                <div class="mb-4 md:mb-6">
+                    <label for="journal-focus" class="block text-gray-700 font-medium mb-1 md:mb-2">Qual será meu foco para a próxima semana?</label>
+                    <textarea id="journal-focus" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg h-24 md:h-28 resize-y focus:ring-2 focus:ring-green-400 transition-all duration-200 journal-textarea" placeholder="Ex: Focar em hidratação e incluir mais vegetais nas refeições."></textarea>
+                </div>
+                
+                <div class="mb-4 md:mb-6">
+                    <label for="journal-rating" class="block text-gray-700 font-medium mb-1 md:mb-2">Nota pessoal de consistência (0 a 10)</label>
+                    <input type="number" id="journal-rating" min="0" max="10" class="w-20 p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: 8">
+                </div>
+                
+                <div class="mb-6 md:mb-8">
+                    <label for="journal-notes" class="block text-gray-700 font-medium mb-1 md:mb-2">Comentários adicionais</label>
+                    <textarea id="journal-notes" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg h-32 md:h-36 resize-y focus:ring-2 focus:ring-green-400 transition-all duration-200 journal-textarea" placeholder="Qualquer outra observação sobre sua semana."></textarea>
+                </div>
+                
+                <button id="save-journal-btn" class="bg-green-600 text-white px-6 py-2 md:px-6 md:py-3 rounded-lg font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-md" aria-label="Salvar Registro do Diário">
+                    Salvar Registro do Diário
+                </button>
+            </section>
+
+            <!-- Aba Feedback -->
+            <section id="feedback" class="tab-content bg-white rounded-xl shadow-md p-4 md:p-6" role="tabpanel" aria-labelledby="feedback-tab">
+                <h2 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-green-700 border-b pb-2 md:pb-3 border-green-100">Avalie sua Experiência</h2>
+                
+                <div class="mb-4 md:mb-6 bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm text-center">
+                    <label class="block text-gray-700 font-bold mb-2 md:mb-3 text-base md:text-lg">Classifique sua experiência com o aplicativo:</label>
+                    <div class="flex justify-center space-x-2">
+                        <button class="star-btn text-3xl md:text-4xl text-gray-300" data-rating="1" aria-label="1 estrela">⭐</button>
+                        <button class="star-btn text-3xl md:text-4xl text-gray-300" data-rating="2" aria-label="2 estrelas">⭐</button>
+                        <button class="star-btn text-3xl md:text-4xl text-gray-300" data-rating="3" aria-label="3 estrelas">⭐</button>
+                        <button class="star-btn text-3xl md:text-4xl text-gray-300" data-rating="4" aria-label="4 estrelas">⭐</button>
+                        <button class="star-btn text-3xl md:text-4xl text-gray-300" data-rating="5" aria-label="5 estrelas">⭐</button>
+                    </div>
+                    <div id="rating-text" class="text-sm text-gray-600 mt-1 md:mt-2 font-medium">0/5 estrelas</div>
+                </div>
+                
+                <div class="mb-4 md:mb-6">
+                    <label for="feedback-positive" class="block text-gray-700 font-medium mb-1 md:mb-2">O que você mais gostou no aplicativo?</label>
+                    <textarea id="feedback-positive" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg h-24 md:h-28 resize-y focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: A facilidade de uso, o acompanhamento de macros, os gráficos."></textarea>
+                </div>
+                
+                <div class="mb-4 md:mb-6">
+                    <label for="feedback-improve" class="block text-gray-700 font-medium mb-1 md:mb-2">O que podemos melhorar?</label>
+                    <textarea id="feedback-improve" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg h-24 md:h-28 resize-y focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Ex: Adicionar mais alimentos ao banco de dados, melhorar a interface em telas pequenas."></textarea>
+                </div>
+                
+                <div class="mb-6 md:mb-8">
+                    <label for="feedback-comments" class="block text-gray-700 font-medium mb-1 md:mb-2">Comentários adicionais (opcional)</label>
+                    <textarea id="feedback-comments" class="w-full p-2 md:p-3 border border-gray-300 rounded-lg h-32 md:h-36 resize-y focus:ring-2 focus:ring-green-400 transition-all duration-200" placeholder="Qualquer outra sugestão ou observação."></textarea>
+                </div>
+                
+                <button id="save-feedback-btn" class="bg-green-600 text-white px-6 py-2 md:px-6 md:py-3 rounded-lg font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-md" aria-label="Enviar Feedback">
+                    Enviar Feedback
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Registrar o plugin datalabels globalmente
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
+                Chart.register(ChartDataLabels);
+            } else {
+                console.warn("Chart.js or ChartDataLabels not loaded yet. Retrying registration...");
+                setTimeout(() => {
+                    if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
+                        Chart.register(ChartDataLabels);
+                    } else {
+                        console.error("Failed to register ChartDataLabels. Charts might not display labels correctly.");
+                    }
+                }, 1000);
+            }
+        });
+
+        // --- Variáveis Globais para Armazenar Dados e Referências DOM ---
+        let userData = {
+            tmb: 0,
+            tdee: 0,
+            dailyCalories: 0,
+            proteinPercent: 30,
+            carbsPercent: 45,
+            fatPercent: 25,
+        };
+
+        let measurements = [];
+        let meals = {}; 
+        let mealTemplates = {}; 
+        let journalEntries = [];
+        let feedbackData = [];
+        let currentRating = 0;
+
+        // Referências DOM (cached for performance)
+        const DOM = {
+            // Tabs
+            tabButtons: document.querySelectorAll('.tab-btn'),
+            tabContents: document.querySelectorAll('.tab-content'),
+
+            // Personal Data Tab
+            personalDataForm: document.getElementById('personal-data-form'),
+            calculateBtn: document.getElementById('calculate-btn'),
+            resultsDiv: document.getElementById('results'),
+            tmbResult: document.getElementById('tmb-result'),
+            tdeeResult: document.getElementById('tdee-result'),
+            goalResult: document.getElementById('goal-result'),
+            goalText: document.getElementById('goal-text'),
+            proteinGrams: document.getElementById('protein-grams'),
+            proteinKcal: document.getElementById('protein-kcal'),
+            carbsGrams: document.getElementById('carbs-grams'),
+            carbsKcal: document.getElementById('carbs-kcal'),
+            fatGrams: document.getElementById('fat-grams'),
+            fatKcal: document.getElementById('fat-kcal'),
+            macroChartCanvas: document.getElementById('macroChart'),
+
+            // Daily Control Tab
+            currentDateSpan: document.getElementById('current-date'),
+            dateInput: document.getElementById('date-input'),
+            currentCalories: document.getElementById('current-calories'),
+            targetCalories: document.getElementById('target-calories'),
+            caloriesProgress: document.getElementById('calories-progress'),
+            currentProtein: document.getElementById('current-protein'),
+            targetProtein: document.getElementById('target-protein'),
+            proteinProgress: document.getElementById('protein-progress'),
+            currentCarbs: document.getElementById('current-carbs'),
+            targetCarbs: document.getElementById('target-carbs'),
+            carbsProgress: document.getElementById('carbs-progress'),
+            currentFat: document.getElementById('current-fat'),
+            targetFat: document.getElementById('target-fat'),
+            fatProgress: document.getElementById('fat-progress'),
+            addMealForm: document.getElementById('add-meal-form'),
+            addFoodBtn: document.getElementById('add-food-btn'),
+            addFoodLoader: document.getElementById('add-food-loader'),
+            dailyMealsDiv: document.getElementById('daily-meals'),
+            mealsChartCanvas: document.getElementById('mealsChart'),
+            dailyMacroChartCanvas: document.getElementById('dailyMacroChart'),
+
+            // Meal Planning Tab
+            addMealTemplateBtn: document.getElementById('add-meal-template-btn'),
+            mealCardsContainer: document.getElementById('meal-cards'),
+            mealDistributionChartCanvas: document.getElementById('mealDistributionChart'),
+
+            // Evolution Tab
+            measurementsForm: document.getElementById('measurements-form'),
+            saveMeasurementBtn: document.getElementById('save-measurement-btn'),
+            measurementsHistoryTable: document.getElementById('measurements-history'),
+            weightChartCanvas: document.getElementById('weightChart'),
+            waistChartCanvas: document.getElementById('waistChart'),
+            abdomenChartCanvas: document.getElementById('abdomenChart'),
+            hipChartCanvas: document.getElementById('hipChart'),
+
+            // Journal Tab
+            journalDateInput: document.getElementById('journal-date'),
+            saveJournalBtn: document.getElementById('save-journal-btn'),
+
+            // Feedback Tab
+            starButtons: document.querySelectorAll('.star-btn'),
+            ratingText: document.getElementById('rating-text'),
+            saveFeedbackBtn: document.getElementById('save-feedback-btn'),
+        };
+
+        // --- Funções de Utilidade ---
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 p-3 rounded-lg shadow-lg text-white z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // --- Funções de Persistência de Dados (localStorage) ---
+        function saveAllData() {
+            try {
+                localStorage.setItem('userData', JSON.stringify(userData));
+                localStorage.setItem('measurements', JSON.stringify(measurements));
+                localStorage.setItem('meals', JSON.stringify(meals));
+                localStorage.setItem('mealTemplates', JSON.stringify(mealTemplates));
+                localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
+                localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
+                // console.log("Dados salvos no localStorage."); // Para depuração
+            } catch (e) {
+                console.error("Erro ao salvar dados no localStorage:", e);
+                showToast("Erro ao salvar dados. Seu navegador pode estar em modo de navegação privada ou o armazenamento está cheio.", 'error');
+            }
+        }
+
+        function loadAllData() {
+            try {
+                const storedUserData = localStorage.getItem('userData');
+                if (storedUserData) userData = { ...userData, ...JSON.parse(storedUserData) }; 
+
+                const storedMeasurements = localStorage.getItem('measurements');
+                if (storedMeasurements) measurements = JSON.parse(storedMeasurements);
+
+                const storedMeals = localStorage.getItem('meals');
+                if (storedMeals) meals = JSON.parse(storedMeals);
+
+                const storedMealTemplates = localStorage.getItem('mealTemplates');
+                if (storedMealTemplates) mealTemplates = JSON.parse(storedMealTemplates);
+
+                const storedJournalEntries = localStorage.getItem('journalEntries');
+                if (storedJournalEntries) journalEntries = JSON.parse(storedJournalEntries);
+
+                const storedFeedbackData = localStorage.getItem('feedbackData');
+                if (storedFeedbackData) feedbackData = JSON.parse(storedFeedbackData);
+
+                // console.log("Dados carregados do localStorage."); // Para depuração
+            } catch (e) {
+                console.error("Erro ao carregar dados do localStorage:", e);
+                showToast("Erro ao carregar dados. Alguns dados podem não ter sido recuperados.", 'error');
+            }
+        }
+
+        // --- Gerenciamento de Abas ---
+        function activateTab(tabId) {
+            DOM.tabButtons.forEach(btn => {
+                btn.classList.remove('bg-green-100', 'text-green-700', 'font-semibold');
+                btn.classList.add('text-gray-700', 'hover:bg-green-50', 'hover:text-green-600', 'font-medium');
+                btn.setAttribute('aria-selected', 'false');
+            });
+            const activeButton = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+            if (activeButton) {
+                activeButton.classList.remove('text-gray-700', 'hover:bg-green-50', 'hover:text-green-600', 'font-medium');
+                activeButton.classList.add('bg-green-100', 'text-green-700', 'font-semibold');
+                activeButton.setAttribute('aria-selected', 'true');
+            }
+
+            DOM.tabContents.forEach(content => {
+                content.classList.remove('active');
+                content.setAttribute('aria-hidden', 'true');
+            });
+            const activeContent = document.getElementById(tabId);
+            if (activeContent) {
+                activeContent.classList.add('active');
+                activeContent.setAttribute('aria-hidden', 'false');
+            }
+            
+            // Atualizar gráficos e dados ao mudar de aba
+            if (tabId === 'controle-diario') {
+                loadDayMeals(DOM.dateInput.value); 
+            } else if (tabId === 'evolucao') {
+                updateMeasurementCharts();
+            } else if (tabId === 'refeicoes') {
+                updateMealCards();
+                updateMealDistributionChart(); 
+            } else if (tabId === 'feedback') {
+                updateStarRatingDisplay();
+            }
+        }
+
+        DOM.tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                activateTab(button.getAttribute('data-tab'));
+            });
+        });
+
+        // --- Aba Dados Pessoais ---
+        function updateCurrentDateDisplay() {
+            const today = new Date();
+            const dateString = today.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+            DOM.currentDateSpan.textContent = dateString.charAt(0).toUpperCase() + dateString.slice(1);
+            
+            const isoDate = today.toISOString().split('T')[0];
+            DOM.dateInput.value = isoDate;
+            DOM.journalDateInput.value = isoDate;
+            DOM.measurementsForm.querySelector('#measurement-date').value = isoDate;
+        }
+
+        DOM.calculateBtn.addEventListener('click', () => {
+            const gender = document.getElementById('gender').value;
+            const age = parseInt(document.getElementById('age').value);
+            const height = parseInt(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const activity = parseFloat(document.getElementById('activity').value);
+            const goal = parseFloat(document.getElementById('goal').value);
+            
+            userData.proteinPercent = parseInt(document.getElementById('protein-percentage').value) || 0;
+            userData.carbsPercent = parseInt(document.getElementById('carbs-percentage').value) || 0;
+            userData.fatPercent = parseInt(document.getElementById('fat-percentage').value) || 0;
+
+            // Armazenar input do usuário para persistência
+            userData.gender = gender;
+            userData.age = age;
+            userData.height = height;
+            userData.weight = weight;
+            userData.activity = activity;
+            userData.goal = goal;
+            
+            if (!age || !height || !weight || isNaN(age) || isNaN(height) || isNaN(weight) || age <= 0 || height <= 0 || weight <= 0) {
+                showToast('Por favor, preencha Idade, Altura e Peso com valores numéricos positivos válidos.', 'error');
+                return;
+            }
+            
+            if ((userData.proteinPercent + userData.carbsPercent + userData.fatPercent) !== 100) {
+                showToast('A soma das porcentagens de Proteína, Carboidratos e Gordura deve ser 100%. Por favor, ajuste.', 'error');
+                return;
+            }
+
+            // Cálculo da TMB (Mifflin-St Jeor)
+            // \$TMB = (10 \times peso) + (6.25 \times altura) - (5 \times idade) + 5\$ (para homens)
+            // \$TMB = (10 \times peso) + (6.25 \times altura) - (5 \times idade) - 161\$ (para mulheres)
+            if (gender === 'M') {
+                userData.tmb = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+            } else {
+                userData.tmb = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+            }
+            
+            // \$TDEE = TMB \times Fator\_Atividade\$
+            // \$Meta\_Diária = TDEE + (TDEE \times Objetivo)\$
+            userData.tdee = userData.tmb * activity;
+            userData.dailyCalories = Math.round(userData.tdee + (userData.tdee * goal));
+            
+            DOM.tmbResult.textContent = Math.round(userData.tmb);
+            DOM.tdeeResult.textContent = Math.round(userData.tdee);
+            DOM.goalResult.textContent = userData.dailyCalories;
+            
+            let goalText = '';
+            if (goal < 0) {
+                goalText = 'Déficit calórico para emagrecimento';
+            } else if (goal > 0) {
+                goalText = 'Superávit calórico para ganho de massa';
+            } else {
+                goalText = 'Manutenção calórica';
+            }
+            DOM.goalText.textContent = goalText;
+            
+            calculateAndDisplayMacros();
+            updateMacroChart();
+            DOM.resultsDiv.classList.remove('hidden');
+            
+            DOM.targetCalories.textContent = userData.dailyCalories;
+            DOM.targetProtein.textContent = Math.round((userData.dailyCalories * userData.proteinPercent / 100) / 4);
+            DOM.targetCarbs.textContent = Math.round((userData.dailyCalories * userData.carbsPercent / 100) / 4);
+            DOM.targetFat.textContent = Math.round((userData.dailyCalories * userData.fatPercent / 100) / 9);
+
+            loadDayMeals(DOM.dateInput.value);
+            saveAllData();
+            showToast('Perfil nutricional e objetivos salvos!', 'success');
+        });
+
+        function calculateAndDisplayMacros() {
+            // \$1g Proteína = 4 kcal\$
+            // \$1g Carboidrato = 4 kcal\$
+            // \$1g Gordura = 9 kcal\$
+            const proteinKcal = Math.round(userData.dailyCalories * userData.proteinPercent / 100);
+            const proteinGrams = Math.round(proteinKcal / 4);
+            
+            const carbsKcal = Math.round(userData.dailyCalories * userData.carbsPercent / 100);
+            const carbsGrams = Math.round(carbsKcal / 4);
+            
+            const fatKcal = Math.round(userData.dailyCalories * userData.fatPercent / 100);
+            const fatGrams = Math.round(fatKcal / 9);
+            
+            DOM.proteinKcal.textContent = proteinKcal + ' kcal';
+            DOM.proteinGrams.textContent = proteinGrams + 'g';
+            
+            DOM.carbsKcal.textContent = carbsKcal + ' kcal';
+            DOM.carbsGrams.textContent = carbsGrams + 'g';
+            
+            DOM.fatKcal.textContent = fatKcal + ' kcal';
+            DOM.fatGrams.textContent = fatGrams + 'g';
+        }
+
+        let macroChartInstance;
+        function updateMacroChart() {
+            if (macroChartInstance) {
+                macroChartInstance.destroy();
+            }
+            
+            macroChartInstance = new Chart(DOM.macroChartCanvas, {
+                type: 'pie',
+                data: {
+                    labels: ['Proteínas', 'Carboidratos', 'Gorduras'],
+                    datasets: [{
+                        data: [
+                            userData.dailyCalories * userData.proteinPercent / 100,
+                            userData.dailyCalories * userData.carbsPercent / 100,
+                            userData.dailyCalories * userData.fatPercent / 100
+                        ],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)', // Vermelho para Proteína
+                            'rgba(54, 162, 235, 0.8)', // Azul para Carboidratos
+                            'rgba(255, 206, 86, 0.8)' // Amarelo para Gorduras
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = userData.dailyCalories > 0 ? ((value / userData.dailyCalories) * 100).toFixed(1) : 0;
+                                    return `${label}: ${Math.round(value)} kcal (${percentage}%)`;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            formatter: (value, ctx) => {
+                                const percentage = userData.dailyCalories > 0 ? ((value / userData.dailyCalories) * 100).toFixed(0) : 0;
+                                return percentage > 5 ? `${percentage}%` : ''; // Mostrar apenas se a porcentagem for significativa
+                            },
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // --- Aba Controle Diário ---
+        let mealsChartInstance, dailyMacroChartInstance;
+        function updateDailyCharts() {
+            const mealTypes = ['Café da Manhã', 'Lanche da Manhã', 'Almoço', 'Lanche da Tarde', 'Jantar', 'Ceia'];
+            const currentDate = DOM.dateInput.value;
+            const dailyMealsForDate = meals[currentDate] || [];
+            
+            let totalCalories = 0;
+            let totalProtein = 0;
+            let totalCarbs = 0;
+            let totalFat = 0;
+
+            dailyMealsForDate.forEach(meal => {
+                totalCalories += meal.calories || 0;
+                totalProtein += meal.protein || 0;
+                totalCarbs += meal.carbs || 0;
+                totalFat += meal.fat || 0;
+            });
+
+            const mealCaloriesByType = mealTypes.map(type => {
+                return dailyMealsForDate
+                    .filter(meal => meal.type === type)
+                    .reduce((sum, meal) => sum + (meal.calories || 0), 0);
+            });
+            
+            DOM.currentCalories.textContent = Math.round(totalCalories);
+            DOM.currentProtein.textContent = Math.round(totalProtein);
+            DOM.currentCarbs.textContent = Math.round(totalCarbs);
+            DOM.currentFat.textContent = Math.round(totalFat);
+            
+            const targetCalories = parseInt(DOM.targetCalories.textContent) || 1;
+            const caloriesProgress = (targetCalories > 0) ? (totalCalories / targetCalories) * 100 : 0;
+            animateProgressBar(DOM.caloriesProgress, caloriesProgress);
+            
+            const targetProtein = parseInt(DOM.targetProtein.textContent) || 1;
+            const proteinProgress = (targetProtein > 0) ? (totalProtein / targetProtein) * 100 : 0;
+            animateProgressBar(DOM.proteinProgress, proteinProgress);
+            
+            const targetCarbs = parseInt(DOM.targetCarbs.textContent) || 1;
+            const carbsProgress = (targetCarbs > 0) ? (totalCarbs / targetCarbs) * 100 : 0;
+            animateProgressBar(DOM.carbsProgress, carbsProgress);
+            
+            const targetFat = parseInt(DOM.targetFat.textContent) || 1;
+            const fatProgress = (targetFat > 0) ? (totalFat / targetFat) * 100 : 0; 
+            animateProgressBar(DOM.fatProgress, fatProgress);
+            
+            if (mealsChartInstance) mealsChartInstance.destroy();
+            if (dailyMacroChartInstance) dailyMacroChartInstance.destroy();
+            
+            mealsChartInstance = new Chart(DOM.mealsChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: mealTypes,
+                    datasets: [{
+                        label: 'Calorias por Refeição',
+                        data: mealCaloriesByType.map(c => Math.round(c)),
+                        backgroundColor: [
+                            'rgba(76, 175, 80, 0.7)', // Verde
+                            'rgba(33, 150, 243, 0.7)', // Azul
+                            'rgba(255, 193, 7, 0.7)', // Âmbar
+                            'rgba(139, 195, 74, 0.7)', // Verde Claro
+                            'rgba(0, 188, 212, 0.7)', // Ciano
+                            'rgba(255, 87, 34, 0.7)'  // Laranja Escuro
+                        ],
+                        borderColor: [
+                            'rgba(76, 175, 80, 1)',
+                            'rgba(33, 150, 243, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(139, 195, 74, 1)',
+                            'rgba(0, 188, 212, 1)',
+                            'rgba(255, 87, 34, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Distribuição de Calorias por Refeição' },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => value > 0 ? `${value} kcal` : '',
+                            color: '#4A5568', 
+                            font: {
+                                weight: 'bold',
+                                size: 10
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Calorias (kcal)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Tipo de Refeição' }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+            
+            dailyMacroChartInstance = new Chart(DOM.dailyMacroChartCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Proteínas', 'Carboidratos', 'Gorduras'],
+                    datasets: [{
+                        data: [totalProtein * 4, totalCarbs * 4, totalFat * 9],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)', // Vermelho para Proteína
+                            'rgba(54, 162, 235, 0.8)', // Azul para Carboidratos
+                            'rgba(255, 206, 86, 0.8)'  // Amarelo para Gorduras
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    let value = context.raw || 0;
+                                    let text = `${label}: ${Math.round(value)} kcal`;
+                                    
+                                    if (label === 'Proteínas') {
+                                        text += ` (${Math.round(value / 4)}g)`;
+                                    } else if (label === 'Carboidratos') {
+                                        text += ` (${Math.round(value / 4)}g)`;
+                                    } else if (label === 'Gorduras') {
+                                        text += ` (${Math.round(value / 9)}g)`;
+                                    }
+                                    return text;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            formatter: (value, ctx) => {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(0) : 0;
+                                return percentage > 5 ? `${percentage}%` : '';
+                            },
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        function loadDayMeals(date) {
+            const mealsForDate = meals[date] || [];
+            
+            if (mealsForDate.length === 0) {
+                DOM.dailyMealsDiv.innerHTML = `
+                    <div class="text-center py-6 md:py-8 text-gray-500 bg-gray-50 rounded-lg shadow-sm">
+                        <p class="text-base md:text-lg font-medium">Nenhuma refeição adicionada nesta data.</p>
+                        <p class="text-sm mt-2">Adicione alimentos para começar o acompanhamento diário!</p>
+                    </div>
+                `;
+                DOM.currentCalories.textContent = 0;
+                DOM.currentProtein.textContent = 0;
+                DOM.currentCarbs.textContent = 0;
+                DOM.currentFat.textContent = 0;
+                animateProgressBar(DOM.caloriesProgress, 0);
+                animateProgressBar(DOM.proteinProgress, 0);
+                animateProgressBar(DOM.carbsProgress, 0);
+                animateProgressBar(DOM.fatProgress, 0);
+                updateDailyCharts();
+                return;
+            }
+            
+            let html = '';
+            const groupedMeals = {};
+            const orderedMealTypes = ['Café da Manhã', 'Lanche da Manhã', 'Almoço', 'Lanche da Tarde', 'Jantar', 'Ceia'];
+            orderedMealTypes.forEach(type => {
+                groupedMeals[type] = mealsForDate.filter(meal => meal.type === type);
+            });
+
+            for (const type of orderedMealTypes) {
+                const mealList = groupedMeals[type];
+                if (mealList.length === 0) continue;
+
+                let typeTotalCalories = 0;
+                let typeTotalProtein = 0;
+                let typeTotalCarbs = 0;
+                let typeTotalFat = 0;
+                
+                html += `<div class="mb-4 md:mb-6 p-3 md:p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <h4 class="text-lg md:text-xl font-bold text-green-700 mb-2 md:mb-3">${type}</h4>
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="min-w-full bg-white responsive-table">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="py-2 px-3 border-b text-left text-sm font-semibold text-gray-600">Alimento</th>
+                                    <th class="py-2 px-3 border-b text-left text-sm font-semibold text-gray-600">Qtd</th>
+                                    <th class="py-2 px-3 border-b text-left text-sm font-semibold text-gray-600">Cal</th>
+                                    <th class="py-2 px-3 border-b text-left text-sm font-semibold text-gray-600">P</th>
+                                    <th class="py-2 px-3 border-b text-left text-sm font-semibold text-gray-600">C</th>
+                                    <th class="py-2 px-3 border-b text-left text-sm font-semibold text-gray-600">G</th>
+                                    <th class="py-2 px-3 border-b text-left text-sm font-semibold text-gray-600">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                mealList.forEach((meal, index) => {
+                    typeTotalCalories += meal.calories || 0;
+                    typeTotalProtein += meal.protein || 0;
+                    typeTotalCarbs += meal.carbs || 0;
+                    typeTotalFat += meal.fat || 0;
+                    
+                    const originalIndex = meals[date].indexOf(meal); 
+
+                    html += `
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="py-2 px-3 border-b text-sm text-gray-800" data-label="Alimento">${meal.food}</td>
+                            <td class="py-2 px-3 border-b text-sm text-gray-800" data-label="Qtd">${meal.quantity} ${meal.unit}</td>
+                            <td class="py-2 px-3 border-b text-sm text-gray-800" data-label="Cal">${Math.round(meal.calories || 0)}</td>
+                            <td class="py-2 px-3 border-b text-sm text-gray-800" data-label="P">${Math.round(meal.protein || 0)}g</td>
+                            <td class="py-2 px-3 border-b text-sm text-gray-800" data-label="C">${Math.round(meal.carbs || 0)}g</td>
+                            <td class="py-2 px-3 border-b text-sm text-gray-800" data-label="G">${Math.round(meal.fat || 0)}g</td>
+                            <td class="py-2 px-3 border-b text-sm text-gray-800" data-label="Ações">
+                                <button class="text-red-500 hover:text-red-700 transition-colors duration-200" onclick="removeMeal('${date}', ${originalIndex})" aria-label="Remover ${meal.food}">
+                                    Remover
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `</tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3 text-right text-sm md:text-md font-semibold text-gray-700">
+                        Total para ${type}: 
+                        <span class="text-green-600">${Math.round(typeTotalCalories)} kcal</span> | 
+                        P: <span class="text-red-600">${Math.round(typeTotalProtein)}g</span> | 
+                        C: <span class="text-blue-600">${Math.round(typeTotalCarbs)}g</span> | 
+                        G: <span class="text-yellow-600">${Math.round(typeTotalFat)}g</span>
+                    </div>
+                </div>`;
+            }
+            
+            DOM.dailyMealsDiv.innerHTML = html;
+            updateDailyCharts();
+            if (document.getElementById('refeicoes').classList.contains('active')) {
+                updateMealDistributionChart();
+            }
+        }
+
+        // --- Funções de Busca de Nutrientes (AGORA COM OS 200 ALIMENTOS) ---
+        const nutritionalDatabase = {
+            "frango grelhado": { "Proteína (g)": 26.9, "Carboidrato (g)": 3.3, "Gordura (g)": 11.5, "Calorias (kcal)": 224 },
+            "peito de frango": { "Proteína (g)": 10.9, "Carboidrato (g)": 29.6, "Gordura (g)": 5.1, "Calorias (kcal)": 208 },
+            "carne bovina moída": { "Proteína (g)": 17.0, "Carboidrato (g)": 12.5, "Gordura (g)": 15.5, "Calorias (kcal)": 258 },
+            "salmão": { "Proteína (g)": 27.5, "Carboidrato (g)": 11.3, "Gordura (g)": 9.4, "Calorias (kcal)": 240 },
+            "atum em lata": { "Proteína (g)": 1.2, "Carboidrato (g)": 41.7, "Gordura (g)": 6.7, "Calorias (kcal)": 232 },
+            "ovo cozido": { "Proteína (g)": 12.4, "Carboidrato (g)": 57.8, "Gordura (g)": 11.3, "Calorias (kcal)": 382 },
+            "clara de ovo": { "Proteína (g)": 20.6, "Carboidrato (g)": 51.5, "Gordura (g)": 6.4, "Calorias (kcal)": 346 },
+            "leite integral": { "Proteína (g)": 16.7, "Carboidrato (g)": 22.6, "Gordura (g)": 23.0, "Calorias (kcal)": 364 },
+            "leite desnatado": { "Proteína (g)": 10.7, "Carboidrato (g)": 27.6, "Gordura (g)": 12.9, "Calorias (kcal)": 269 },
+            "iogurte natural": { "Proteína (g)": 26.4, "Carboidrato (g)": 6.4, "Gordura (g)": 19.0, "Calorias (kcal)": 302 },
+            "queijo muçarela": { "Proteína (g)": 26.0, "Carboidrato (g)": 57.2, "Gordura (g)": 1.2, "Calorias (kcal)": 344 },
+            "queijo cottage": { "Proteína (g)": 4.0, "Carboidrato (g)": 41.0, "Gordura (g)": 8.4, "Calorias (kcal)": 256 },
+            "arroz branco": { "Proteína (g)": 8.4, "Carboidrato (g)": 36.0, "Gordura (g)": 1.2, "Calorias (kcal)": 188 },
+            "arroz integral": { "Proteína (g)": 20.5, "Carboidrato (g)": 50.9, "Gordura (g)": 5.5, "Calorias (kcal)": 335 },
+            "feijão preto": { "Proteína (g)": 11.8, "Carboidrato (g)": 0.2, "Gordura (g)": 22.2, "Calorias (kcal)": 248 },
+            "feijão carioca": { "Proteína (g)": 8.7, "Carboidrato (g)": 53.8, "Gordura (g)": 4.4, "Calorias (kcal)": 290 },
+            "grão-de-bico": { "Proteína (g)": 28.9, "Carboidrato (g)": 33.5, "Gordura (g)": 10.8, "Calorias (kcal)": 347 },
+            "lentilha": { "Proteína (g)": 9.3, "Carboidrato (g)": 17.3, "Gordura (g)": 15.8, "Calorias (kcal)": 249 },
+            "soja cozida": { "Proteína (g)": 16.1, "Carboidrato (g)": 15.4, "Gordura (g)": 15.9, "Calorias (kcal)": 269 },
+            "pão francês": { "Proteína (g)": 14.4, "Carboidrato (g)": 46.6, "Gordura (g)": 23.2, "Calorias (kcal)": 453 },
+            "pão integral": { "Proteína (g)": 5.2, "Carboidrato (g)": 25.6, "Gordura (g)": 24.5, "Calorias (kcal)": 344 },
+            "macarrão cozido": { "Proteína (g)": 9.1, "Carboidrato (g)": 50.1, "Gordura (g)": 3.4, "Calorias (kcal)": 267 },
+            "batata inglesa": { "Proteína (g)": 19.0, "Carboidrato (g)": 55.0, "Gordura (g)": 4.9, "Calorias (kcal)": 340 },
+            "batata-doce": { "Proteína (g)": 9.8, "Carboidrato (g)": 18.6, "Gordura (g)": 15.5, "Calorias (kcal)": 253 },
+            "mandioquinha": { "Proteína (g)": 21.1, "Carboidrato (g)": 38.3, "Gordura (g)": 12.3, "Calorias (kcal)": 348 },
+            "mandioca": { "Proteína (g)": 13.9, "Carboidrato (g)": 49.1, "Gordura (g)": 19.4, "Calorias (kcal)": 427 },
+            "cenoura": { "Proteína (g)": 17.0, "Carboidrato (g)": 29.1, "Gordura (g)": 6.9, "Calorias (kcal)": 246 },
+            "beterraba": { "Proteína (g)": 10.5, "Carboidrato (g)": 0.4, "Gordura (g)": 10.2, "Calorias (kcal)": 135 },
+            "abobrinha": { "Proteína (g)": 18.1, "Carboidrato (g)": 27.2, "Gordura (g)": 5.1, "Calorias (kcal)": 227 },
+            "berinjela": { "Proteína (g)": 25.8, "Carboidrato (g)": 25.4, "Gordura (g)": 8.7, "Calorias (kcal)": 283 },
+            "espinafre": { "Proteína (g)": 25.5, "Carboidrato (g)": 33.7, "Gordura (g)": 7.5, "Calorias (kcal)": 304 },
+            "couve": { "Proteína (g)": 1.8, "Carboidrato (g)": 52.9, "Gordura (g)": 22.0, "Calorias (kcal)": 417 },
+            "alface": { "Proteína (g)": 13.3, "Carboidrato (g)": 44.3, "Gordura (g)": 16.0, "Calorias (kcal)": 374 },
+            "rúcula": { "Proteína (g)": 14.4, "Carboidrato (g)": 37.5, "Gordura (g)": 20.3, "Calorias (kcal)": 390 },
+            "tomate": { "Proteína (g)": 12.6, "Carboidrato (g)": 5.4, "Gordura (g)": 8.4, "Calorias (kcal)": 148 },
+            "pepino": { "Proteína (g)": 0.2, "Carboidrato (g)": 59.0, "Gordura (g)": 16.6, "Calorias (kcal)": 386 },
+            "brócolis": { "Proteína (g)": 23.0, "Carboidrato (g)": 45.8, "Gordura (g)": 12.0, "Calorias (kcal)": 383 },
+            "couve-flor": { "Proteína (g)": 26.7, "Carboidrato (g)": 18.0, "Gordura (g)": 12.0, "Calorias (kcal)": 287 },
+            "milho verde": { "Proteína (g)": 24.9, "Carboidrato (g)": 7.9, "Gordura (g)": 9.8, "Calorias (kcal)": 219 },
+            "ervilha": { "Proteína (g)": 22.2, "Carboidrato (g)": 44.2, "Gordura (g)": 8.7, "Calorias (kcal)": 344 },
+            "maçã": { "Proteína (g)": 27.5, "Carboidrato (g)": 48.3, "Gordura (g)": 5.2, "Calorias (kcal)": 350 },
+            "banana": { "Proteína (g)": 5.4, "Carboidrato (g)": 25.4, "Gordura (g)": 13.0, "Calorias (kcal)": 240 },
+            "pera": { "Proteína (g)": 19.1, "Carboidrato (g)": 11.3, "Gordura (g)": 15.7, "Calorias (kcal)": 263 },
+            "mamão": { "Proteína (g)": 13.2, "Carboidrato (g)": 10.8, "Gordura (g)": 11.7, "Calorias (kcal)": 201 },
+            "abacaxi": { "Proteína (g)": 2.9, "Carboidrato (g)": 22.8, "Gordura (g)": 4.3, "Calorias (kcal)": 142 },
+            "laranja": { "Proteína (g)": 13.6, "Carboidrato (g)": 40.0, "Gordura (g)": 23.5, "Calorias (kcal)": 426 },
+            "melancia": { "Proteína (g)": 19.4, "Carboidrato (g)": 25.3, "Gordura (g)": 9.9, "Calorias (kcal)": 268 },
+            "melão": { "Proteína (g)": 22.4, "Carboidrato (g)": 21.0, "Gordura (g)": 21.6, "Calorias (kcal)": 368 },
+            "uva": { "Proteína (g)": 23.4, "Carboidrato (g)": 40.1, "Gordura (g)": 15.6, "Calorias (kcal)": 394 },
+            "morango": { "Proteína (g)": 1.5, "Carboidrato (g)": 49.1, "Gordura (g)": 5.9, "Calorias (kcal)": 256 },
+            "amendoim": { "Proteína (g)": 12.0, "Carboidrato (g)": 42.1, "Gordura (g)": 12.9, "Calorias (kcal)": 332 },
+            "castanha-do-pará": { "Proteína (g)": 2.2, "Carboidrato (g)": 41.1, "Gordura (g)": 20.9, "Calorias (kcal)": 361 },
+            "castanha de caju": { "Proteína (g)": 0.6, "Carboidrato (g)": 27.4, "Gordura (g)": 20.7, "Calorias (kcal)": 298 },
+            "nozes": { "Proteína (g)": 11.7, "Carboidrato (g)": 34.3, "Gordura (g)": 3.1, "Calorias (kcal)": 212 },
+            "amêndoas": { "Proteína (g)": 19.7, "Carboidrato (g)": 27.5, "Gordura (g)": 14.7, "Calorias (kcal)": 321 },
+            "aveia": { "Proteína (g)": 16.2, "Carboidrato (g)": 13.4, "Gordura (g)": 16.8, "Calorias (kcal)": 270 },
+            "centeio": { "Proteína (g)": 6.5, "Carboidrato (g)": 21.4, "Gordura (g)": 20.4, "Calorias (kcal)": 295 },
+            "trigo": { "Proteína (g)": 3.2, "Carboidrato (g)": 32.9, "Gordura (g)": 15.8, "Calorias (kcal)": 287 },
+            "farinha de trigo": { "Proteína (g)": 12.6, "Carboidrato (g)": 50.9, "Gordura (g)": 5.3, "Calorias (kcal)": 302 },
+            "farinha de aveia": { "Proteína (g)": 7.8, "Carboidrato (g)": 47.1, "Gordura (g)": 13.6, "Calorias (kcal)": 342 },
+            "quinoa": { "Proteína (g)": 20.0, "Carboidrato (g)": 11.1, "Gordura (g)": 22.7, "Calorias (kcal)": 329 },
+            "chia": { "Proteína (g)": 27.5, "Carboidrato (g)": 24.2, "Gordura (g)": 15.6, "Calorias (kcal)": 347 },
+            "linhaça": { "Proteína (g)": 24.6, "Carboidrato (g)": 17.0, "Gordura (g)": 24.6, "Calorias (kcal)": 388 },
+            "cacau em pó": { "Proteína (g)": 15.2, "Carboidrato (g)": 12.2, "Gordura (g)": 3.1, "Calorias (kcal)": 138 },
+            "chocolate ao leite": { "Proteína (g)": 3.3, "Carboidrato (g)": 26.4, "Gordura (g)": 1.8, "Calorias (kcal)": 135 },
+            "chocolate meio amargo": { "Proteína (g)": 20.3, "Carboidrato (g)": 43.3, "Gordura (g)": 7.0, "Calorias (kcal)": 317 },
+            "refrigerante": { "Proteína (g)": 5.6, "Carboidrato (g)": 28.0, "Gordura (g)": 23.1, "Calorias (kcal)": 342 },
+            "suco de laranja": { "Proteína (g)": 13.8, "Carboidrato (g)": 35.4, "Gordura (g)": 21.0, "Calorias (kcal)": 386 },
+            "suco de uva": { "Proteína (g)": 2.3, "Carboidrato (g)": 14.0, "Gordura (g)": 17.3, "Calorias (kcal)": 221 },
+            "água de coco": { "Proteína (g)": 26.7, "Carboidrato (g)": 31.1, "Gordura (g)": 24.8, "Calorias (kcal)": 454 },
+            "café": { "Proteína (g)": 24.2, "Carboidrato (g)": 38.7, "Gordura (g)": 10.2, "Calorias (kcal)": 343 },
+            "chá verde": { "Proteína (g)": 5.7, "Carboidrato (g)": 57.3, "Gordura (g)": 13.4, "Calorias (kcal)": 373 },
+            "chá preto": { "Proteína (g)": 0.6, "Carboidrato (g)": 38.8, "Gordura (g)": 18.7, "Calorias (kcal)": 326 },
+            "azeite de oliva": { "Proteína (g)": 18.8, "Carboidrato (g)": 1.9, "Gordura (g)": 17.8, "Calorias (kcal)": 243 },
+            "óleo de soja": { "Proteína (g)": 17.2, "Carboidrato (g)": 18.3, "Gordura (g)": 9.5, "Calorias (kcal)": 228 },
+            "manteiga": { "Proteína (g)": 5.4, "Carboidrato (g)": 1.9, "Gordura (g)": 5.5, "Calorias (kcal)": 79 },
+            "margarina": { "Proteína (g)": 0.7, "Carboidrato (g)": 16.6, "Gordura (g)": 2.6, "Calorias (kcal)": 93 },
+            "maionese": { "Proteína (g)": 26.2, "Carboidrato (g)": 15.8, "Gordura (g)": 3.7, "Calorias (kcal)": 201 },
+            "molho de tomate": { "Proteína (g)": 21.1, "Carboidrato (g)": 23.2, "Gordura (g)": 17.9, "Calorias (kcal)": 338 },
+            "ketchup": { "Proteína (g)": 25.5, "Carboidrato (g)": 49.6, "Gordura (g)": 19.5, "Calorias (kcal)": 476 },
+            "mostarda": { "Proteína (g)": 22.2, "Carboidrato (g)": 59.9, "Gordura (g)": 11.7, "Calorias (kcal)": 434 },
+            "molho shoyu": { "Proteína (g)": 13.7, "Carboidrato (g)": 29.4, "Gordura (g)": 23.1, "Calorias (kcal)": 380 },
+            "molho barbecue": { "Proteína (g)": 12.9, "Carboidrato (g)": 39.8, "Gordura (g)": 8.5, "Calorias (kcal)": 287 },
+            "salsicha": { "Proteína (g)": 10.9, "Carboidrato (g)": 0.1, "Gordura (g)": 2.0, "Calorias (kcal)": 62 },
+            "presunto": { "Proteína (g)": 7.0, "Carboidrato (g)": 13.2, "Gordura (g)": 14.1, "Calorias (kcal)": 208 },
+            "mortadela": { "Proteína (g)": 13.7, "Carboidrato (g)": 13.0, "Gordura (g)": 19.6, "Calorias (kcal)": 283 },
+            "salame": { "Proteína (g)": 23.0, "Carboidrato (g)": 3.9, "Gordura (g)": 8.4, "Calorias (kcal)": 183 },
+            "peito de peru": { "Proteína (g)": 13.7, "Carboidrato (g)": 4.0, "Gordura (g)": 8.0, "Calorias (kcal)": 143 },
+            "hambúrguer bovino": { "Proteína (g)": 23.7, "Carboidrato (g)": 40.2, "Gordura (g)": 23.1, "Calorias (kcal)": 464 },
+            "hambúrguer de frango": { "Proteína (g)": 27.9, "Carboidrato (g)": 54.0, "Gordura (g)": 4.1, "Calorias (kcal)": 364 },
+            "nuggets": { "Proteína (g)": 26.3, "Carboidrato (g)": 18.9, "Gordura (g)": 0.9, "Calorias (kcal)": 189 },
+            "pizza de mussarela": { "Proteína (g)": 25.9, "Carboidrato (g)": 51.8, "Gordura (g)": 0.6, "Calorias (kcal)": 316 },
+            "pizza de calabresa": { "Proteína (g)": 27.0, "Carboidrato (g)": 9.8, "Gordura (g)": 2.1, "Calorias (kcal)": 166 },
+            "lasagna": { "Proteína (g)": 0.6, "Carboidrato (g)": 42.0, "Gordura (g)": 23.1, "Calorias (kcal)": 378 },
+            "strogonoff de frango": { "Proteína (g)": 7.1, "Carboidrato (g)": 30.9, "Gordura (g)": 21.7, "Calorias (kcal)": 347 },
+            "esfiha": { "Proteína (g)": 11.0, "Carboidrato (g)": 17.8, "Gordura (g)": 15.8, "Calorias (kcal)": 257 },
+            "coxinha": { "Proteína (g)": 4.0, "Carboidrato (g)": 35.9, "Gordura (g)": 22.3, "Calorias (kcal)": 360 },
+            "pastel de carne": { "Proteína (g)": 26.8, "Carboidrato (g)": 50.3, "Gordura (g)": 22.4, "Calorias (kcal)": 510 },
+            "pastel de queijo": { "Proteína (g)": 13.6, "Carboidrato (g)": 18.4, "Gordura (g)": 11.8, "Calorias (kcal)": 234 },
+            "empada": { "Proteína (g)": 12.5, "Carboidrato (g)": 9.0, "Gordura (g)": 7.6, "Calorias (kcal)": 154 },
+            "sopa de legumes": { "Proteína (g)": 18.5, "Carboidrato (g)": 42.3, "Gordura (g)": 11.2, "Calorias (kcal)": 344 },
+            "sopa de feijão": { "Proteína (g)": 3.6, "Carboidrato (g)": 57.3, "Gordura (g)": 8.4, "Calorias (kcal)": 319 },
+            "sopa de frango": { "Proteína (g)": 10.6, "Carboidrato (g)": 59.3, "Gordura (g)": 13.9, "Calorias (kcal)": 405 },
+            "caldo verde": { "Proteína (g)": 8.5, "Carboidrato (g)": 56.6, "Gordura (g)": 16.9, "Calorias (kcal)": 412 },
+            "canja de galinha": { "Proteína (g)": 7.8, "Carboidrato (g)": 8.4, "Gordura (g)": 21.6, "Calorias (kcal)": 259 },
+            "bolo de chocolate": { "Proteína (g)": 23.8, "Carboidrato (g)": 5.2, "Gordura (g)": 13.5, "Calorias (kcal)": 238 },
+            "bolo de cenoura": { "Proteína (g)": 25.8, "Carboidrato (g)": 44.7, "Gordura (g)": 10.5, "Calorias (kcal)": 376 },
+            "pudim": { "Proteína (g)": 9.7, "Carboidrato (g)": 50.6, "Gordura (g)": 8.7, "Calorias (kcal)": 320 },
+            "gelatina": { "Proteína (g)": 19.0, "Carboidrato (g)": 7.2, "Gordura (g)": 0.1, "Calorias (kcal)": 106 },
+            "sorvete de creme": { "Proteína (g)": 18.9, "Carboidrato (g)": 17.1, "Gordura (g)": 13.3, "Calorias (kcal)": 264 },
+            "açaí com granola": { "Proteína (g)": 18.2, "Carboidrato (g)": 10.3, "Gordura (g)": 24.9, "Calorias (kcal)": 338 },
+            "granola": { "Proteína (g)": 14.9, "Carboidrato (g)": 4.1, "Gordura (g)": 13.7, "Calorias (kcal)": 199 },
+            "barra de cereal": { "Proteína (g)": 16.4, "Carboidrato (g)": 49.2, "Gordura (g)": 17.9, "Calorias (kcal)": 424 },
+            "barrinha proteica": { "Proteína (g)": 21.3, "Carboidrato (g)": 46.9, "Gordura (g)": 15.6, "Calorias (kcal)": 413 },
+            "whey protein": { "Proteína (g)": 21.0, "Carboidrato (g)": 17.1, "Gordura (g)": 0.4, "Calorias (kcal)": 156 },
+            "tofu": { "Proteína (g)": 24.7, "Carboidrato (g)": 50.8, "Gordura (g)": 2.0, "Calorias (kcal)": 320 },
+            "proteína de soja": { "Proteína (g)": 21.8, "Carboidrato (g)": 15.6, "Gordura (g)": 10.4, "Calorias (kcal)": 243 },
+            "seitan": { "Proteína (g)": 8.6, "Carboidrato (g)": 0.7, "Gordura (g)": 12.7, "Calorias (kcal)": 152 },
+            "tempeh": { "Proteína (g)": 12.3, "Carboidrato (g)": 10.3, "Gordura (g)": 3.8, "Calorias (kcal)": 125 },
+            "hambúrguer vegetal": { "Proteína (g)": 0.6, "Carboidrato (g)": 52.0, "Gordura (g)": 10.4, "Calorias (kcal)": 304 },
+            "pipoca": { "Proteína (g)": 8.5, "Carboidrato (g)": 30.5, "Gordura (g)": 7.9, "Calorias (kcal)": 227 },
+            "torrada": { "Proteína (g)": 17.1, "Carboidrato (g)": 16.7, "Gordura (g)": 13.3, "Calorias (kcal)": 255 },
+            "biscoito de água e sal": { "Proteína (g)": 21.6, "Carboidrato (g)": 5.5, "Gordura (g)": 24.6, "Calorias (kcal)": 330 },
+            "biscoito recheado": { "Proteína (g)": 7.8, "Carboidrato (g)": 8.5, "Gordura (g)": 8.9, "Calorias (kcal)": 145 },
+            "bolacha maria": { "Proteína (g)": 26.5, "Carboidrato (g)": 47.6, "Gordura (g)": 20.8, "Calorias (kcal)": 484 },
+            "croissant": { "Proteína (g)": 0.3, "Carboidrato (g)": 1.3, "Gordura (g)": 9.4, "Calorias (kcal)": 91 },
+            "pão de queijo": { "Proteína (g)": 8.6, "Carboidrato (g)": 57.8, "Gordura (g)": 0.9, "Calorias (kcal)": 274 },
+            "pão doce": { "Proteína (g)": 10.2, "Carboidrato (g)": 28.9, "Gordura (g)": 24.8, "Calorias (kcal)": 380 },
+            "panqueca": { "Proteína (g)": 11.3, "Carboidrato (g)": 50.7, "Gordura (g)": 23.7, "Calorias (kcal)": 461 },
+            "crepioca": { "Proteína (g)": 26.2, "Carboidrato (g)": 4.5, "Gordura (g)": 16.9, "Calorias (kcal)": 275 },
+            "tapioca": { "Proteína (g)": 6.8, "Carboidrato (g)": 42.9, "Gordura (g)": 21.8, "Calorias (kcal)": 395 },
+            "cuscuz": { "Proteína (g)": 11.9, "Carboidrato (g)": 55.4, "Gordura (g)": 12.0, "Calorias (kcal)": 377 },
+            "polenta": { "Proteína (g)": 8.0, "Carboidrato (g)": 0.3, "Gordura (g)": 19.2, "Calorias (kcal)": 206 },
+            "purê de batata": { "Proteína (g)": 2.9, "Carboidrato (g)": 53.1, "Gordura (g)": 4.4, "Calorias (kcal)": 264 },
+            "farofa": { "Proteína (g)": 14.3, "Carboidrato (g)": 27.3, "Gordura (g)": 2.8, "Calorias (kcal)": 192 },
+            "repolho": { "Proteína (g)": 8.5, "Carboidrato (g)": 38.6, "Gordura (g)": 9.6, "Calorias (kcal)": 275 },
+            "nabo": { "Proteína (g)": 12.8, "Carboidrato (g)": 51.0, "Gordura (g)": 0.2, "Calorias (kcal)": 257 },
+            "jiló": { "Proteína (g)": 0.2, "Carboidrato (g)": 31.3, "Gordura (g)": 19.8, "Calorias (kcal)": 304 },
+            "chuchu": { "Proteína (g)": 26.5, "Carboidrato (g)": 35.3, "Gordura (g)": 11.8, "Calorias (kcal)": 353 },
+            "palmito": { "Proteína (g)": 1.0, "Carboidrato (g)": 3.5, "Gordura (g)": 1.1, "Calorias (kcal)": 28 },
+            "alcachofra": { "Proteína (g)": 24.4, "Carboidrato (g)": 4.1, "Gordura (g)": 13.5, "Calorias (kcal)": 236 },
+            "quiabo": { "Proteína (g)": 21.7, "Carboidrato (g)": 1.6, "Gordura (g)": 3.4, "Calorias (kcal)": 124 },
+            "maxixe": { "Proteína (g)": 18.0, "Carboidrato (g)": 7.3, "Gordura (g)": 1.7, "Calorias (kcal)": 116 },
+            "inhame": { "Proteína (g)": 27.5, "Carboidrato (g)": 48.7, "Gordura (g)": 13.2, "Calorias (kcal)": 424 },
+            "cará": { "Proteína (g)": 18.3, "Carboidrato (g)": 4.0, "Gordura (g)": 13.8, "Calorias (kcal)": 213 },
+            "kiwi": { "Proteína (g)": 14.3, "Carboidrato (g)": 38.6, "Gordura (g)": 14.5, "Calorias (kcal)": 342 },
+            "coco": { "Proteína (g)": 29.6, "Carboidrato (g)": 43.6, "Gordura (g)": 5.4, "Calorias (kcal)": 341 },
+            "cajá": { "Proteína (g)": 11.4, "Carboidrato (g)": 13.6, "Gordura (g)": 16.5, "Calorias (kcal)": 248 },
+            "caju": { "Proteína (g)": 21.8, "Carboidrato (g)": 25.6, "Gordura (g)": 6.9, "Calorias (kcal)": 252 },
+            "jabuticaba": { "Proteína (g)": 17.3, "Carboidrato (g)": 1.2, "Gordura (g)": 14.2, "Calorias (kcal)": 202 },
+            "acerola": { "Proteína (g)": 26.7, "Carboidrato (g)": 42.5, "Gordura (g)": 10.5, "Calorias (kcal)": 371 },
+            "graviola": { "Proteína (g)": 11.4, "Carboidrato (g)": 23.0, "Gordura (g)": 9.0, "Calorias (kcal)": 219 },
+            "goiaba": { "Proteína (g)": 19.9, "Carboidrato (g)": 40.9, "Gordura (g)": 17.9, "Calorias (kcal)": 404 },
+            "tamarindo": { "Proteína (g)": 19.7, "Carboidrato (g)": 50.5, "Gordura (g)": 0.2, "Calorias (kcal)": 283 },
+            "seriguela": { "Proteína (g)": 20.2, "Carboidrato (g)": 6.1, "Gordura (g)": 14.8, "Calorias (kcal)": 238 },
+            "bacaba": { "Proteína (g)": 7.8, "Carboidrato (g)": 38.2, "Gordura (g)": 22.3, "Calorias (kcal)": 385 },
+            "bacuri": { "Proteína (g)": 14.5, "Carboidrato (g)": 18.2, "Gordura (g)": 17.4, "Calorias (kcal)": 287 },
+            "cupuaçu": { "Proteína (g)": 26.7, "Carboidrato (g)": 22.7, "Gordura (g)": 18.6, "Calorias (kcal)": 365 },
+            "buriti": { "Proteína (g)": 9.9, "Carboidrato (g)": 49.1, "Gordura (g)": 15.3, "Calorias (kcal)": 374 },
+            "pequi": { "Proteína (g)": 30.0, "Carboidrato (g)": 41.2, "Gordura (g)": 24.2, "Calorias (kcal)": 503 },
+            "almeirão": { "Proteína (g)": 20.1, "Carboidrato (g)": 52.0, "Gordura (g)": 18.1, "Calorias (kcal)": 451 },
+            "agrião": { "Proteína (g)": 2.4, "Carboidrato (g)": 24.0, "Gordura (g)": 7.2, "Calorias (kcal)": 170 },
+            "alho-poró": { "Proteína (g)": 16.9, "Carboidrato (g)": 52.5, "Gordura (g)": 21.8, "Calorias (kcal)": 474 },
+            "endívia": { "Proteína (g)": 2.0, "Carboidrato (g)": 9.2, "Gordura (g)": 15.7, "Calorias (kcal)": 186 },
+            "escarola": { "Proteína (g)": 12.1, "Carboidrato (g)": 39.6, "Gordura (g)": 15.8, "Calorias (kcal)": 349 },
+            "pimentão": { "Proteína (g)": 16.9, "Carboidrato (g)": 29.0, "Gordura (g)": 12.3, "Calorias (kcal)": 294 },
+            "cebola": { "Proteína (g)": 12.3, "Carboidrato (g)": 6.6, "Gordura (g)": 18.9, "Calorias (kcal)": 246 },
+            "alho": { "Proteína (g)": 4.9, "Carboidrato (g)": 2.0, "Gordura (g)": 20.8, "Calorias (kcal)": 215 },
+            "gengibre": { "Proteína (g)": 8.8, "Carboidrato (g)": 1.2, "Gordura (g)": 15.1, "Calorias (kcal)": 176 },
+            "pimenta": { "Proteína (g)": 6.5, "Carboidrato (g)": 43.7, "Gordura (g)": 2.6, "Calorias (kcal)": 224 },
+            "canela": { "Proteína (g)": 9.5, "Carboidrato (g)": 24.6, "Gordura (g)": 20.2, "Calorias (kcal)": 318 },
+            "cravo": { "Proteína (g)": 29.0, "Carboidrato (g)": 52.0, "Gordura (g)": 2.8, "Calorias (kcal)": 349 },
+            "noz-moscada": { "Proteína (g)": 4.2, "Carboidrato (g)": 38.7, "Gordura (g)": 20.7, "Calorias (kcal)": 358 },
+            "manjericão": { "Proteína (g)": 24.8, "Carboidrato (g)": 4.2, "Gordura (g)": 10.3, "Calorias (kcal)": 209 },
+            "orégano": { "Proteína (g)": 24.9, "Carboidrato (g)": 12.6, "Gordura (g)": 18.3, "Calorias (kcal)": 315 },
+            "salsinha": { "Proteína (g)": 28.1, "Carboidrato (g)": 50.4, "Gordura (g)": 9.7, "Calorias (kcal)": 401 },
+            "cebolinha": { "Proteína (g)": 15.9, "Carboidrato (g)": 43.9, "Gordura (g)": 4.0, "Calorias (kcal)": 275 },
+            "coentro": { "Proteína (g)": 29.8, "Carboidrato (g)": 35.3, "Gordura (g)": 24.2, "Calorias (kcal)": 478 },
+            "hortelã": { "Proteína (g)": 25.9, "Carboidrato (g)": 16.2, "Gordura (g)": 7.3, "Calorias (kcal)": 234 },
+            "erva-doce": { "Proteína (g)": 10.7, "Carboidrato (g)": 44.7, "Gordura (g)": 15.5, "Calorias (kcal)": 361 },
+            "levedo de cerveja": { "Proteína (g)": 3.8, "Carboidrato (g)": 10.1, "Gordura (g)": 9.1, "Calorias (kcal)": 138 },
+            "fermento biológico": { "Proteína (g)": 1.4, "Carboidrato (g)": 9.5, "Gordura (g)": 7.8, "Calorias (kcal)": 114 },
+            "gelatina sem sabor": { "Proteína (g)": 25.8, "Carboidrato (g)": 27.1, "Gordura (g)": 11.8, "Calorias (kcal)": 318 },
+            "ágar-ágar": { "Proteína (g)": 14.7, "Carboidrato (g)": 0.6, "Gordura (g)": 2.8, "Calorias (kcal)": 86 },
+            "clara em pó": { "Proteína (g)": 2.3, "Carboidrato (g)": 20.4, "Gordura (g)": 22.5, "Calorias (kcal)": 293 }
+        };
+
+        async function getNutritionalData(foodName, quantity, unit) {
+            // Simula um atraso de rede para feedback visual
+            await new Promise(resolve => setTimeout(resolve, 300)); 
+
+            const normalizedFoodName = foodName.toLowerCase().trim();
+            const data = nutritionalDatabase[normalizedFoodName];
+
+            if (!data) {
+                showToast(`Alimento "${foodName}" não encontrado na base de dados. Por favor, verifique a grafia ou adicione manualmente.`, 'error');
+                return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+            }
+
+            let multiplier = 1;
+            // A tabela é por 100g. Se a unidade for 'g' ou 'ml', o multiplicador é (quantidade / 100).
+            // Para 'un', precisamos de uma estimativa ou o usuário deve inserir o peso em 'g' ou 'ml'.
+            if (unit === 'g' || unit === 'ml') {
+                multiplier = quantity / 100;
+            } else if (unit === 'un') {
+                // Para 'un', tentamos estimar um peso médio. Se não houver, assumimos 100g/ml.
+                // Você pode expandir este mapeamento para mais alimentos comuns em 'un'.
+                if (normalizedFoodName.includes("ovo")) {
+                    multiplier = (quantity * 60) / 100; // Assumindo 1 ovo médio = 60g
+                } else if (normalizedFoodName.includes("maçã") || normalizedFoodName.includes("banana") || normalizedFoodName.includes("laranja")) {
+                    multiplier = (quantity * 150) / 100; // Assumindo 1 fruta média = 150g
+                } else if (normalizedFoodName.includes("pão francês")) {
+                    multiplier = (quantity * 50) / 100; // Assumindo 1 pão francês = 50g
+                } else {
+                    // Se não houver mapeamento específico para 'un', assumimos que 1 unidade é 100g/ml
+                    // e o usuário deve ajustar a quantidade para refletir o peso real.
+                    showToast(`Para "${foodName}", a unidade 'un' é uma estimativa. Considere usar 'g' ou 'ml' para maior precisão.`, 'info');
+                    multiplier = quantity / 100; 
+                }
+            }
+
+            return {
+                calories: data["Calorias (kcal)"] * multiplier,
+                protein: data["Proteína (g)"] * multiplier,
+                carbs: data["Carboidrato (g)"] * multiplier,
+                fat: data["Gordura (g)"] * multiplier
+            };
+        }
+
+        DOM.addFoodBtn.addEventListener('click', async () => {
+            const date = DOM.dateInput.value;
+            const type = document.getElementById('meal-type').value;
+            const food = document.getElementById('food-name').value.trim();
+            const quantity = parseFloat(document.getElementById('food-quantity').value);
+            const unit = document.getElementById('quantity-unit').value;
+            
+            if (!date || !type || !food || isNaN(quantity) || quantity <= 0) {
+                showToast('Por favor, preencha todos os campos obrigatórios com valores válidos (Alimento, Quantidade > 0).', 'error');
+                return;
+            }
+
+            DOM.addFoodBtn.disabled = true;
+            DOM.addFoodLoader.classList.remove('hidden');
+            
+            try {
+                const nutritionalData = await getNutritionalData(food, quantity, unit);
+
+                if (nutritionalData.calories === 0 && nutritionalData.protein === 0 && nutritionalData.carbs === 0 && nutritionalData.fat === 0) {
+                    // Se o alimento não foi encontrado na base de dados, a função getNutritionalData já exibiu um toast.
+                    // Aqui, podemos decidir se queremos adicionar um item "vazio" ou abortar.
+                    // Por enquanto, vamos abortar para não adicionar dados incorretos.
+                    showToast(`Não foi possível adicionar "${food}" sem dados nutricionais válidos.`, 'error');
+                    return;
+                }
+                
+                const newMeal = {
+                    type,
+                    food,
+                    quantity,
+                    unit,
+                    calories: nutritionalData.calories,
+                    protein: nutritionalData.protein,
+                    carbs: nutritionalData.carbs,
+                    fat: nutritionalData.fat
+                };
+                
+                if (!meals[date]) {
+                    meals[date] = [];
+                }
+                meals[date].push(newMeal);
+                
+                document.getElementById('food-name').value = '';
+                document.getElementById('food-quantity').value = '';
+                
+                loadDayMeals(date);
+                saveAllData();
+                showToast('Alimento adicionado com sucesso!', 'success');
+            } catch (error) {
+                console.error("Erro ao adicionar alimento:", error);
+                showToast("Ocorreu um erro ao adicionar o alimento. Tente novamente.", 'error');
+            } finally {
+                DOM.addFoodBtn.disabled = false;
+                DOM.addFoodLoader.classList.add('hidden');
+            }
+        });
+
+        window.removeMeal = function(date, index) {
+            if (confirm('Tem certeza que deseja remover esta refeição?')) {
+                if (meals[date] && meals[date][index]) {
+                    meals[date].splice(index, 1);
+                    if (meals[date].length === 0) {
+                        delete meals[date];
+                    }
+                    loadDayMeals(date);
+                    saveAllData();
+                    showToast('Refeição removida com sucesso!', 'success');
+                }
+            }
+        };
+
+        DOM.dateInput.addEventListener('change', function() {
+            loadDayMeals(this.value);
+        });
+
+        // --- Aba Refeições (Planejamento de Refeições) ---
+        DOM.addMealTemplateBtn.addEventListener('click', () => {
+            const type = document.getElementById('meal-type-template').value;
+            const name = document.getElementById('meal-name-template').value.trim();
+            
+            if (!name) {
+                showToast('Por favor, insira um nome para a refeição.', 'error');
+                return;
+            }
+            
+            if (!mealTemplates[type]) {
+                mealTemplates[type] = [];
+            }
+            
+            mealTemplates[type].push({
+                name,
+                foods: []
+            });
+            
+            showToast('Template de refeição criado com sucesso!', 'success');
+            document.getElementById('meal-name-template').value = '';
+            updateMealCards();
+            saveAllData();
+        });
+
+        function updateMealCards() {
+            DOM.mealCardsContainer.innerHTML = '';
+            
+            let hasMeals = false;
+            const orderedMealTypes = ['Café da Manhã', 'Lanche da Manhã', 'Almoço', 'Lanche da Tarde', 'Jantar', 'Ceia'];
+
+            orderedMealTypes.forEach(type => {
+                if (mealTemplates[type] && mealTemplates[type].length > 0) {
+                    hasMeals = true;
+                    mealTemplates[type].forEach((template, templateIndex) => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-white p-4 md:p-5 rounded-lg shadow-md border border-gray-200 mb-4 transform transition-transform hover:scale-[1.01]';
+                        
+                        let foodsHtml = '';
+                        let totalTemplateCalories = 0;
+                        let totalTemplateProtein = 0;
+                        let totalTemplateCarbs = 0;
+                        let totalTemplateFat = 0;
+
+                        if (template.foods.length > 0) {
+                            foodsHtml += `<h5 class="font-semibold text-gray-700 mt-3 mb-2 text-sm">Alimentos:</h5>
+                                <ul class="list-disc pl-5 text-sm text-gray-600 space-y-1">`;
+                            template.foods.forEach((foodItem, foodIndex) => {
+                                totalTemplateCalories += foodItem.calories;
+                                totalTemplateProtein += foodItem.protein;
+                                totalTemplateCarbs += foodItem.carbs;
+                                totalTemplateFat += foodItem.fat;
+                                foodsHtml += `<li>${foodItem.food} (${foodItem.quantity}${foodItem.unit}) - ${Math.round(foodItem.calories)}kcal 
+                                    <button class="text-red-400 hover:text-red-600 ml-2 transition-colors duration-200" onclick="removeFoodFromTemplate('${type}', ${templateIndex}, ${foodIndex})" aria-label="Remover ${foodItem.food} do template">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </li>`;
+                            });
+                            foodsHtml += `</ul>
+                                <p class="text-sm text-gray-700 mt-3 font-medium">Total: <span class="text-green-600">${Math.round(totalTemplateCalories)}kcal</span> | P:<span class="text-red-600">${Math.round(totalTemplateProtein)}g</span> | C:<span class="text-blue-600">${Math.round(totalTemplateCarbs)}g</span> | G:<span class="text-yellow-600">${Math.round(totalTemplateFat)}g</span></p>`;
+                        } else {
+                            foodsHtml += `<p class="text-sm text-gray-500 mt-2">Nenhum alimento adicionado a este template.</p>`;
+                        }
+
+                        card.innerHTML = `
+                            <h4 class="font-bold text-lg md:text-xl text-green-700">${template.name}</h4>
+                            <p class="text-sm text-gray-500 mb-2">${type}</p>
+                            ${foodsHtml}
+                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                <h5 class="font-semibold text-gray-700 mb-2 text-sm">Adicionar Alimento ao Template:</h5>
+                                <div class="flex flex-wrap items-end gap-2">
+                                    <input type="text" id="template-food-name-${type}-${templateIndex}" class="flex-grow p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-400" placeholder="Nome do alimento">
+                                    <input type="number" id="template-food-quantity-${type}-${templateIndex}" class="w-20 p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-400" placeholder="Qtd">
+                                    <select id="template-quantity-unit-${type}-${templateIndex}" class="p-2 border border-gray-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-green-400">
+                                        <option value="g">g</option>
+                                        <option value="ml">ml</option>
+                                        <option value="un">un</option>
+                                    </select>
+                                    <button type="button" class="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-sm flex items-center justify-center" 
+                                            onclick="addFoodToTemplate('${type}', ${templateIndex})" aria-label="Adicionar alimento ao template">
+                                        Add <span id="template-food-loader-${type}-${templateIndex}" class="loader hidden"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <button class="text-red-500 hover:text-red-700 mt-4 text-sm font-medium transition-colors duration-200" onclick="removeMealTemplate('${type}', ${templateIndex})" aria-label="Remover Template de Refeição">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Remover Template
+                            </button>
+                        `;
+                        DOM.mealCardsContainer.appendChild(card);
+                    });
+                }
+            });
+
+            if (!hasMeals) {
+                DOM.mealCardsContainer.innerHTML = `
+                    <div class="border border-dashed border-gray-300 rounded-lg p-6 md:p-8 text-center text-gray-500">
+                        <p>Nenhum template de refeição criado ainda.</p>
+                        <p class="text-sm mt-2">Use o formulário ao lado para começar!</p>
+                    </div>
+                `;
+            }
+        }
+
+        window.addFoodToTemplate = async function(type, templateIndex) {
+            const foodNameInput = document.getElementById(`template-food-name-${type}-${templateIndex}`);
+            const quantityInput = document.getElementById(`template-food-quantity-${type}-${templateIndex}`);
+            const unitSelect = document.getElementById(`template-quantity-unit-${type}-${templateIndex}`);
+            const loader = document.getElementById(`template-food-loader-${type}-${templateIndex}`);
+            const addButton = loader.parentElement;
+
+            const food = foodNameInput.value.trim();
+            const quantity = parseFloat(quantityInput.value);
+            const unit = unitSelect.value;
+
+            if (!food || isNaN(quantity) || quantity <= 0) {
+                showToast('Por favor, preencha o nome do alimento e uma quantidade válida.', 'error');
+                return;
+            }
+
+            addButton.disabled = true;
+            loader.classList.remove('hidden');
+
+            try {
+                const nutritionalData = await getNutritionalData(food, quantity, unit);
+
+                if (nutritionalData.calories === 0 && nutritionalData.protein === 0 && nutritionalData.carbs === 0 && nutritionalData.fat === 0) {
+                    showToast(`Não foi possível adicionar "${food}" ao template sem dados nutricionais válidos.`, 'error');
+                    return;
+                }
+
+                const newFoodItem = {
+                    food,
+                    quantity,
+                    unit,
+                    calories: nutritionalData.calories,
+                    protein: nutritionalData.protein,
+                    carbs: nutritionalData.carbs,
+                    fat: nutritionalData.fat
+                };
+                mealTemplates[type][templateIndex].foods.push(newFoodItem);
+                updateMealCards();
+                saveAllData();
+                showToast('Alimento adicionado ao template com sucesso!', 'success');
+                foodNameInput.value = '';
+                quantityInput.value = '';
+            } catch (error) {
+                console.error("Erro ao adicionar alimento ao template:", error);
+                showToast("Ocorreu um erro ao adicionar o alimento ao template. Tente novamente.", 'error');
+            } finally {
+                addButton.disabled = false;
+                loader.classList.add('hidden');
+            }
+        };
+
+        window.removeFoodFromTemplate = function(type, templateIndex, foodIndex) {
+            if (confirm('Tem certeza que deseja remover este alimento do template?')) {
+                if (mealTemplates[type] && mealTemplates[type][templateIndex] && mealTemplates[type][templateIndex].foods[foodIndex]) {
+                    mealTemplates[type][templateIndex].foods.splice(foodIndex, 1);
+                    updateMealCards();
+                    saveAllData();
+                    showToast('Alimento removido do template!', 'success');
+                }
+            }
+        };
+
+        window.removeMealTemplate = function(type, index) {
+            if (confirm('Tem certeza que deseja remover este template de refeição? Todos os alimentos associados serão perdidos.')) {
+                if (mealTemplates[type] && mealTemplates[type][index]) {
+                    mealTemplates[type].splice(index, 1);
+                    if (mealTemplates[type].length === 0) {
+                        delete mealTemplates[type];
+                    }
+                    updateMealCards();
+                    saveAllData();
+                    showToast('Template de refeição removido com sucesso!', 'success');
+                }
+            }
+        };
+
+        let mealDistributionChartInstance;
+        function updateMealDistributionChart() {
+            if (mealDistributionChartInstance) {
+                mealDistributionChartInstance.destroy();
+            }
+            
+            const allMeals = Object.values(meals).flat(); 
+            const mealTypesForChart = ['Café da Manhã', 'Lanche da Manhã', 'Almoço', 'Lanche da Tarde', 'Jantar', 'Ceia'];
+            
+            const caloriesPerMealType = mealTypesForChart.map(type => {
+                return allMeals
+                    .filter(meal => meal.type === type)
+                    .reduce((sum, meal) => sum + (meal.calories || 0), 0);
+            });
+
+            mealDistributionChartInstance = new Chart(DOM.mealDistributionChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: mealTypesForChart,
+                    datasets: [{
+                        label: 'Calorias',
+                        data: caloriesPerMealType.map(c => Math.round(c)),
+                        backgroundColor: 'rgba(76, 175, 80, 0.7)', // Verde
+                        borderColor: 'rgba(76, 175, 80, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Distribuição de Calorias por Refeição (Histórico Geral)' },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => value > 0 ? `${value} kcal` : '',
+                            color: '#4A5568', 
+                            font: {
+                                weight: 'bold',
+                                size: 10
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Calorias' }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+
+        // --- Aba Evolução ---
+        let weightChartInstance, waistChartInstance, abdomenChartInstance, hipChartInstance;
+        function updateMeasurementCharts() {
+            measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            const dates = measurements.map(m => new Date(m.date).toLocaleDateString('pt-BR'));
+            
+            const createOrUpdateChart = (canvas, label, dataKey, color) => {
+                const ctx = canvas.getContext('2d');
+                let chartInstance = window[canvas.id + 'Instance'];
+
+                const chartData = measurements.map(m => m[dataKey]);
+                const hasData = chartData.some(val => val !== null && val !== undefined && !isNaN(val)); 
+
+                if (!hasData) {
+                    if (chartInstance) {
+                        chartInstance.destroy();
+                        window[canvas.id + 'Instance'] = null;
+                    }
+                    // Limpa o canvas e exibe uma mensagem
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#9CA3AF'; 
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Sem dados para exibir o gráfico.', canvas.width / 2, canvas.height / 2);
+                    return;
+                }
+
+                if (chartInstance) {
+                    chartInstance.data.labels = dates;
+                    chartInstance.data.datasets[0].data = chartData;
+                    chartInstance.update();
+                } else {
+                    chartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: label,
+                                data: chartData,
+                                backgroundColor: `${color.replace('1)', '0.15)')}`, 
+                                borderColor: color,
+                                borderWidth: 2,
+                                tension: 0.3, 
+                                fill: true,
+                                pointBackgroundColor: color,
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 1,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return `${context.dataset.label}: ${context.parsed.y} ${dataKey === 'weight' ? 'kg' : 'cm'}`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    title: { display: true, text: label, font: { size: 14, weight: 'bold' } },
+                                    grid: { color: '#e5e7eb' } 
+                                },
+                                x: {
+                                    title: { display: true, text: 'Data', font: { size: 14, weight: 'bold' } },
+                                    grid: { display: false }
+                                }
+                            }
+                        }
+                    });
+                    window[canvas.id + 'Instance'] = chartInstance;
+                }
+            };
+
+            createOrUpdateChart(DOM.weightChartCanvas, 'Peso (kg)', 'weight', 'rgba(76, 175, 80, 1)'); // Verde
+            createOrUpdateChart(DOM.waistChartCanvas, 'Cintura (cm)', 'waist', 'rgba(33, 150, 243, 1)'); // Azul
+            createOrUpdateChart(DOM.abdomenChartCanvas, 'Abdômen (cm)', 'abdomen', 'rgba(255, 193, 7, 1)'); // Âmbar
+            createOrUpdateChart(DOM.hipChartCanvas, 'Quadril (cm)', 'hip', 'rgba(139, 195, 74, 1)'); // Verde Claro
+            
+            updateMeasurementsTable();
+        }
+
+        function updateMeasurementsTable() {
+            DOM.measurementsHistoryTable.innerHTML = '';
+            
+            if (measurements.length === 0) {
+                DOM.measurementsHistoryTable.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma medição registrada</td></tr>';
+                return;
+            }
+            
+            const sortedMeasurements = [...measurements].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedMeasurements.forEach((measurement, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors duration-150';
+                row.innerHTML = `
+                    <td class="p-3 border-b text-sm text-gray-800" data-label="Data">${new Date(measurement.date).toLocaleDateString('pt-BR')}</td>
+                    <td class="p-3 border-b text-sm text-gray-800" data-label="Peso (kg)">${measurement.weight ? measurement.weight.toFixed(1) : '-'}</td>
+                    <td class="p-3 border-b text-sm text-gray-800" data-label="Cintura (cm)">${measurement.waist ? measurement.waist.toFixed(1) : '-'}</td>
+                    <td class="p-3 border-b text-sm text-gray-800" data-label="Abdômen (cm)">${measurement.abdomen ? measurement.abdomen.toFixed(1) : '-'}</td>
+                    <td class="p-3 border-b text-sm text-gray-800" data-label="Quadril (cm)">${measurement.hip ? measurement.hip.toFixed(1) : '-'}</td>
+                    <td class="p-3 border-b text-sm text-gray-800" data-label="Braço (cm)">${measurement.arm ? measurement.arm.toFixed(1) : '-'}</td>
+                    <td class="p-3 border-b text-sm text-gray-800" data-label="Coxa (cm)">${measurement.thigh ? measurement.thigh.toFixed(1) : '-'}</td>
+                    <td class="p-3 border-b text-sm text-gray-800" data-label="Ações">
+                        <button class="text-red-500 hover:text-red-700 transition-colors duration-200" onclick="removeMeasurement(${index})" aria-label="Remover medição de ${new Date(measurement.date).toLocaleDateString('pt-BR')}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                DOM.measurementsHistoryTable.appendChild(row);
+            });
+        }
+
+        DOM.saveMeasurementBtn.addEventListener('click', () => {
+            const date = document.getElementById('measurement-date').value;
+            const weight = parseFloat(document.getElementById('measurement-weight').value);
+            const waist = parseFloat(document.getElementById('measurement-waist').value);
+            const abdomen = parseFloat(document.getElementById('measurement-abdomen').value);
+            const hip = parseFloat(document.getElementById('measurement-hip').value);
+            const arm = parseFloat(document.getElementById('measurement-arm').value);
+            const thigh = parseFloat(document.getElementById('measurement-thigh').value);
+            const chest = parseFloat(document.getElementById('measurement-chest').value);
+            
+            if (!date || isNaN(weight) || weight <= 0) {
+                showToast('Por favor, preencha pelo menos a data e o peso com valores numéricos positivos válidos.', 'error');
+                return;
+            }
+            
+            const newMeasurement = {
+                date,
+                weight,
+                waist: isNaN(waist) ? null : waist,
+                abdomen: isNaN(abdomen) ? null : abdomen,
+                hip: isNaN(hip) ? null : hip,
+                arm: isNaN(arm) ? null : arm,
+                thigh: isNaN(thigh) ? null : thigh,
+                chest: isNaN(chest) ? null : chest
+            };
+            
+            const existingIndex = measurements.findIndex(m => m.date === date);
+            if (existingIndex >= 0) {
+                measurements[existingIndex] = newMeasurement;
+            } else {
+                measurements.push(newMeasurement);
+            }
+            
+            measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            updateMeasurementCharts();
+            DOM.measurementsForm.reset();
+            saveAllData();
+            showToast('Medição salva com sucesso!', 'success');
+        });
+
+        window.removeMeasurement = function(index) {
+            if (confirm('Tem certeza que deseja remover esta medição?')) {
+                const sortedMeasurementsForDisplay = [...measurements].sort((a, b) => new Date(b.date) - new Date(a.date));
+                const measurementToRemove = sortedMeasurementsForDisplay[index];
+                
+                const originalIndex = measurements.findIndex(m => 
+                    m.date === measurementToRemove.date && 
+                    m.weight === measurementToRemove.weight &&
+                    m.waist === measurementToRemove.waist 
+                );
+                
+                if (originalIndex > -1) {
+                    measurements.splice(originalIndex, 1);
+                    updateMeasurementCharts();
+                    saveAllData();
+                    showToast('Medição removida com sucesso!', 'success');
+                } else {
+                    console.error("Erro: Medição não encontrada para remoção no índice original.");
+                    showToast("Erro ao remover medição.", 'error');
+                }
+            }
+        };
+
+        // --- Funções de Animação ---
+        function animateProgressBar(barElement, targetPercent) {
+            let currentPercent = 0;
+            const duration = 500; 
+            const stepTime = 10; 
+            const steps = duration / stepTime;
+            const increment = targetPercent / steps;
+
+            barElement.classList.remove('animate-pulse-custom', 'over-target');
+            barElement.style.width = '0%';
+
+            let startTime = null;
+
+            function animate(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const progress = (currentTime - startTime) / duration;
+
+                if (progress < 1) {
+                    currentPercent = increment * (progress * steps);
+                    barElement.style.width = `${Math.min(100, currentPercent)}%`;
+                    requestAnimationFrame(animate);
+                } else {
+                    barElement.style.width = `${Math.min(100, targetPercent)}%`;
+                    if (targetPercent >= 100) {
+                        barElement.classList.add('animate-pulse-custom');
+                        if (targetPercent > 100) {
+                            barElement.classList.add('over-target');
+                        }
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        
+        // --- Aba Diário ---
+        DOM.saveJournalBtn.addEventListener('click', function() {
+            const date = document.getElementById('journal-date').value;
+            const good = document.getElementById('journal-good').value.trim();
+            const improve = document.getElementById('journal-improve').value.trim();
+            const focus = document.getElementById('journal-focus').value.trim();
+            const rating = parseInt(document.getElementById('journal-rating').value);
+            const notes = document.getElementById('journal-notes').value.trim();
+            
+            if (!date || !good || !improve || !focus || isNaN(rating) || rating < 0 || rating > 10) {
+                showToast('Por favor, preencha todos os campos obrigatórios do diário com valores válidos (Nota de 0 a 10).', 'error');
+                return;
+            }
+            
+            const newEntry = {
+                date,
+                good,
+                improve,
+                focus,
+                rating,
+                notes
+            };
+            
+            const existingIndex = journalEntries.findIndex(e => e.date === date);
+            if (existingIndex >= 0) {
+                journalEntries[existingIndex] = newEntry;
+            } else {
+                journalEntries.push(newEntry);
+            }
+            
+            document.getElementById('journal-good').value = '';
+            document.getElementById('journal-improve').value = '';
+            document.getElementById('journal-focus').value = '';
+            document.getElementById('journal-rating').value = '';
+            document.getElementById('journal-notes').value = '';
+            
+            saveAllData();
+            showToast('Registro salvo no diário!', 'success');
+        });
+
+        // --- Aba Feedback ---
+        DOM.starButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                currentRating = parseInt(this.getAttribute('data-rating'));
+                updateStarRatingDisplay();
+            });
+        });
+
+        function updateStarRatingDisplay() {
+            DOM.starButtons.forEach((star, index) => {
+                if (index < currentRating) {
+                    star.classList.add('selected');
+                } else {
+                    star.classList.remove('selected');
+                }
+            });
+            DOM.ratingText.textContent = `${currentRating}/5 estrelas`;
+        }
+
+        DOM.saveFeedbackBtn.addEventListener('click', function() {
+            const positive = document.getElementById('feedback-positive').value.trim();
+            const improve = document.getElementById('feedback-improve').value.trim();
+            const comments = document.getElementById('feedback-comments').value.trim();
+            
+            if (currentRating === 0) {
+                showToast('Por favor, selecione uma avaliação de estrelas.', 'error');
+                return;
+            }
+            
+            const newFeedback = {
+                rating: currentRating,
+                positive,
+                improve,
+                comments,
+                date: new Date().toISOString().split('T')[0]
+            };
+            
+            feedbackData.push(newFeedback);
+            showToast('Obrigado pelo seu feedback!', 'success');
+            document.getElementById('feedback-positive').value = '';
+            document.getElementById('feedback-improve').value = '';
+            document.getElementById('feedback-comments').value = '';
+            currentRating = 0;
+            updateStarRatingDisplay();
+            saveAllData();
+        });
+
+        // --- Inicialização da Aplicação ---
+        function initializeApp() {
+            loadAllData(); // Carrega dados do localStorage
+            updateCurrentDateDisplay(); 
+
+            // Preenche os campos do formulário de dados pessoais com os dados carregados
+            document.getElementById('gender').value = userData.gender || 'M';
+            document.getElementById('age').value = userData.age || '';
+            document.getElementById('height').value = userData.height || '';
+            document.getElementById('weight').value = userData.weight || '';
+            document.getElementById('activity').value = userData.activity || '1.2';
+            document.getElementById('goal').value = userData.goal || '-0.2';
+            document.getElementById('protein-percentage').value = userData.proteinPercent;
+            document.getElementById('carbs-percentage').value = userData.carbsPercent;
+            document.getElementById('fat-percentage').value = userData.fatPercent;
+
+            // Se houver dados de perfil, recalcula e exibe
+            if (userData.dailyCalories > 0) {
+                DOM.calculateBtn.click(); 
+            }
+
+            updateMealCards();
+            updateMeasurementCharts();
+            updateStarRatingDisplay();
+            activateTab('dados-pessoais');
+        }
+
+        // Garantir que o DOM esteja totalmente carregado antes de inicializar a aplicação
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
