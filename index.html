@@ -653,10 +653,18 @@
                         </form>
                     </div>
                     
+                    <!-- Seção de Comparação Numérica de Medidas -->
                     <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
-                        <h3 class="text-xl font-bold mb-3 md:mb-4 text-green-700">Evolução do Peso</h3>
-                        <!-- Altura do canvas reduzida para 180px -->
-                        <canvas id="weightChart" height="180"></canvas>
+                        <h3 class="text-xl font-bold mb-3 md:mb-4 text-green-700">Comparativo de Medidas</h3>
+                        <div id="measurement-comparison" class="space-y-3">
+                            <p class="text-gray-700"><span class="font-semibold">Peso:</span> <span id="compare-weight">--</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Cintura:</span> <span id="compare-waist">--</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Abdômen:</span> <span id="compare-abdomen">--</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Quadril:</span> <span id="compare-hip">--</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Braço:</span> <span id="compare-arm">--</span></p>
+                            <p class="text-gray-700"><span class="font-semibold">Coxa:</span> <span id="compare-thigh">--</span></p>
+                            <!-- <p class="text-gray-700"><span class="font-semibold">Peitoral:</span> <span id="compare-chest">--</span></p> -->
+                        </div>
                     </div>
                 </div>
                 
@@ -685,31 +693,23 @@
                     </table>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                <!-- REMOVIDO: Div que continha os gráficos de evolução -->
+                <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                     <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
                         <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Evolução da Cintura</h4>
-                        <!-- Altura do canvas reduzida para 180px -->
-                        <canvas id="waistChart" height="180"></canvas>
+                        <canvas id="waistChart" height="150"></canvas>
                     </div>
                     
                     <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
                         <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Evolução do Abdômen</h4>
-                        <!-- Altura do canvas reduzida para 180px -->
-                        <canvas id="abdomenChart" height="180"></canvas>
+                        <canvas id="abdomenChart" height="150"></canvas>
                     </div>
                     
                     <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
                         <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Evolução do Quadril</h4>
-                        <!-- Altura do canvas reduzida para 180px -->
-                        <canvas id="hipChart" height="180"></canvas>
+                        <canvas id="hipChart" height="150"></canvas>
                     </div>
-
-                    <!-- REMOVIDO: Gráfico de Peitoral para simplificar -->
-                    <!-- <div class="bg-gray-50 p-4 md:p-5 rounded-lg shadow-sm">
-                        <h4 class="font-semibold text-gray-700 mb-2 md:mb-3 text-base md:text-lg">Evolução do Peitoral</h4>
-                        <canvas id="chestChart" height="200"></canvas>
-                    </div> -->
-                </div>
+                </div> -->
             </section>
 
             <!-- Aba Diário -->
@@ -876,12 +876,21 @@
             measurementsForm: document.getElementById('measurements-form'),
             saveMeasurementBtn: document.getElementById('save-measurement-btn'),
             measurementsHistoryTable: document.getElementById('measurements-history'),
-            weightChartCanvas: document.getElementById('weightChart'),
-            waistChartCanvas: document.getElementById('waistChart'),
-            abdomenChartCanvas: document.getElementById('abdomenChart'),
-            hipChartCanvas: document.getElementById('hipChart'),
-            // REMOVIDO: Referência ao canvas do gráfico de peitoral
-            // chestChartCanvas: document.getElementById('chestChart'),
+            // REMOVIDO: Referências aos canvas dos gráficos de evolução
+            // weightChartCanvas: document.getElementById('weightChart'),
+            // waistChartCanvas: document.getElementById('waistChart'),
+            // abdomenChartCanvas: document.getElementById('abdomenChart'),
+            // hipChartCanvas: document.getElementById('hipChart'),
+            // chestChartCanvas: document.getElementById('chestChart'), // Já removido, mas mantendo o comentário para clareza
+
+            // Novas referências para a comparação numérica
+            compareWeight: document.getElementById('compare-weight'),
+            compareWaist: document.getElementById('compare-waist'),
+            compareAbdomen: document.getElementById('compare-abdomen'),
+            compareHip: document.getElementById('compare-hip'),
+            compareArm: document.getElementById('compare-arm'),
+            compareThigh: document.getElementById('compare-thigh'),
+            // compareChest: document.getElementById('compare-chest'), // Se quiser manter o peitoral na comparação numérica
 
             // Journal Tab
             journalDateInput: document.getElementById('journal-date'),
@@ -975,7 +984,7 @@
             if (tabId === 'controle-diario') {
                 loadDayMeals(DOM.dateInput.value); 
             } else if (tabId === 'evolucao') {
-                updateMeasurementCharts();
+                updateMeasurementsDisplay(); // Nova função para atualizar a exibição numérica
             } else if (tabId === 'refeicoes') {
                 updateMealCards();
                 updateMealDistributionChart(); 
@@ -1971,115 +1980,53 @@
         }
 
         // --- Aba Evolução ---
-        let weightChartInstance, waistChartInstance, abdomenChartInstance, hipChartInstance;
-        function updateMeasurementCharts() {
+        // REMOVIDO: Variáveis de instância de gráficos
+        // let weightChartInstance, waistChartInstance, abdomenChartInstance, hipChartInstance;
+
+        // Nova função para atualizar a exibição numérica das medidas
+        function updateMeasurementsDisplay() {
+            DOM.measurementsHistoryTable.innerHTML = ''; // Limpa a tabela antes de preencher
+            
+            if (measurements.length < 2) {
+                DOM.measurementComparison.innerHTML = `
+                    <p class="text-gray-500 text-center">Registre pelo menos duas medições para ver o comparativo.</p>
+                `;
+                DOM.measurementsHistoryTable.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">Nenhuma medição registrada</td></tr>'; // Colspan ajustado
+                return;
+            }
+
+            // Ordena as medidas por data (mais antiga para mais recente)
             measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            const dates = measurements.map(m => new Date(m.date).toLocaleDateString('pt-BR'));
-            
-            const createOrUpdateChart = (canvas, label, dataKey, color) => {
-                const ctx = canvas.getContext('2d');
-                let chartInstance = window[canvas.id + 'Instance'];
 
-                const chartData = measurements.map(m => m[dataKey]).filter(val => val !== null && val !== undefined && !isNaN(val)); // Filtra valores nulos/indefinidos/NaN
-                const hasData = chartData.length > 0;
+            const latestMeasurement = measurements[measurements.length - 1];
+            const previousMeasurement = measurements[measurements.length - 2];
 
-                if (!hasData) {
-                    if (chartInstance) {
-                        chartInstance.destroy();
-                        window[canvas.id + 'Instance'] = null;
-                    }
-                    // Limpa o canvas e exibe uma mensagem
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.font = '16px Arial';
-                    ctx.fillStyle = '#9CA3AF'; 
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Sem dados para exibir o gráfico.', canvas.width / 2, canvas.height / 2);
-                    return;
+            const formatComparison = (latest, previous, unit) => {
+                if (latest === null || previous === null || latest === undefined || previous === undefined) {
+                    return '--';
                 }
-
-                // Calcula min/max para a escala Y, adicionando um pequeno padding
-                const dataMin = Math.min(...chartData);
-                const dataMax = Math.max(...chartData);
-                const padding = (dataMax - dataMin) * 0.1; // 10% de padding
-                const suggestedMin = dataMin - padding;
-                const suggestedMax = dataMax + padding;
-
-                if (chartInstance) {
-                    chartInstance.data.labels = dates;
-                    chartInstance.data.datasets[0].data = measurements.map(m => m[dataKey]); // Usa os dados originais para o gráfico
-                    chartInstance.options.scales.y.suggestedMin = suggestedMin;
-                    chartInstance.options.scales.y.suggestedMax = suggestedMax;
-                    chartInstance.update();
-                } else {
-                    chartInstance = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: dates,
-                            datasets: [{
-                                label: label,
-                                data: measurements.map(m => m[dataKey]), // Usa os dados originais para o gráfico
-                                backgroundColor: `${color.replace('1)', '0.15)')}`, 
-                                borderColor: color,
-                                borderWidth: 2,
-                                tension: 0.3, 
-                                fill: true,
-                                pointBackgroundColor: color,
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 1,
-                                pointRadius: 4,
-                                pointHoverRadius: 6
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `${context.dataset.label}: ${context.parsed.y} ${dataKey === 'weight' ? 'kg' : 'cm'}`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: false,
-                                    suggestedMin: suggestedMin, // Define o mínimo sugerido
-                                    suggestedMax: suggestedMax, // Define o máximo sugerido
-                                    title: { display: true, text: label, font: { size: 14, weight: 'bold' } },
-                                    grid: { color: '#e5e7eb' } 
-                                },
-                                x: {
-                                    title: { display: true, text: 'Data', font: { size: 14, weight: 'bold' } },
-                                    grid: { display: false }
-                                }
-                            }
-                        }
-                    });
-                    window[canvas.id + 'Instance'] = chartInstance;
-                }
+                const diff = latest - previous;
+                const sign = diff > 0 ? '+' : '';
+                const colorClass = diff > 0 ? 'text-red-600' : (diff < 0 ? 'text-green-600' : 'text-gray-700');
+                return `<span class="${colorClass}">${latest.toFixed(1)}${unit} (${sign}${diff.toFixed(1)}${unit})</span>`;
             };
 
-            createOrUpdateChart(DOM.weightChartCanvas, 'Peso (kg)', 'weight', 'rgba(76, 175, 80, 1)'); // Verde
-            createOrUpdateChart(DOM.waistChartCanvas, 'Cintura (cm)', 'waist', 'rgba(33, 150, 243, 1)'); // Azul
-            createOrUpdateChart(DOM.abdomenChartCanvas, 'Abdômen (cm)', 'abdomen', 'rgba(255, 193, 7, 1)'); // Âmbar
-            createOrUpdateChart(DOM.hipChartCanvas, 'Quadril (cm)', 'hip', 'rgba(139, 195, 74, 1)'); // Verde Claro
-            // REMOVIDO: Chamada para o gráfico de peitoral
-            // createOrUpdateChart(DOM.chestChartCanvas, 'Peitoral (cm)', 'chest', 'rgba(255, 87, 34, 1)'); // Laranja Escuro
-            
-            updateMeasurementsTable();
+            DOM.compareWeight.innerHTML = formatComparison(latestMeasurement.weight, previousMeasurement.weight, 'kg');
+            DOM.compareWaist.innerHTML = formatComparison(latestMeasurement.waist, previousMeasurement.waist, 'cm');
+            DOM.compareAbdomen.innerHTML = formatComparison(latestMeasurement.abdomen, previousMeasurement.abdomen, 'cm');
+            DOM.compareHip.innerHTML = formatComparison(latestMeasurement.hip, previousMeasurement.hip, 'cm');
+            DOM.compareArm.innerHTML = formatComparison(latestMeasurement.arm, previousMeasurement.arm, 'cm');
+            DOM.compareThigh.innerHTML = formatComparison(latestMeasurement.thigh, previousMeasurement.thigh, 'cm');
+            // DOM.compareChest.innerHTML = formatComparison(latestMeasurement.chest, previousMeasurement.chest, 'cm'); // Se mantiver o peitoral
+
+            updateMeasurementsTable(); // Atualiza a tabela de histórico
         }
 
         function updateMeasurementsTable() {
             DOM.measurementsHistoryTable.innerHTML = '';
             
             if (measurements.length === 0) {
-                DOM.measurementsHistoryTable.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">Nenhuma medição registrada</td></tr>';
+                DOM.measurementsHistoryTable.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">Nenhuma medição registrada</td></tr>'; // Colspan ajustado
                 return;
             }
             
@@ -2145,7 +2092,7 @@
             
             measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            updateMeasurementCharts();
+            updateMeasurementsDisplay(); // Atualiza a exibição numérica
             DOM.measurementsForm.reset();
             saveAllData();
             showToast('Medição salva com sucesso!', 'success');
@@ -2164,7 +2111,7 @@
                 
                 if (originalIndex > -1) {
                     measurements.splice(originalIndex, 1);
-                    updateMeasurementCharts();
+                    updateMeasurementsDisplay(); // Atualiza a exibição numérica
                     saveAllData();
                     showToast('Medição removida com sucesso!', 'success');
                 } else {
@@ -2317,7 +2264,7 @@
             }
 
             updateMealCards();
-            updateMeasurementCharts();
+            updateMeasurementsDisplay(); // Chama a nova função de exibição numérica
             updateStarRatingDisplay();
             activateTab('dados-pessoais');
         }
@@ -2327,4 +2274,3 @@
     </script>
 </body>
 </html>
-
