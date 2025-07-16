@@ -1985,40 +1985,45 @@
 
         // Nova função para atualizar a exibição numérica das medidas
         function updateMeasurementsDisplay() {
-            DOM.measurementsHistoryTable.innerHTML = ''; // Limpa a tabela antes de preencher
-            
-            if (measurements.length < 2) {
+            // Limpa a comparação antes de preencher
+            DOM.compareWeight.textContent = '--';
+            DOM.compareWaist.textContent = '--';
+            DOM.compareAbdomen.textContent = '--';
+            DOM.compareHip.textContent = '--';
+            DOM.compareArm.textContent = '--';
+            DOM.compareThigh.textContent = '--';
+            // DOM.compareChest.textContent = '--'; // Se mantiver o peitoral
+
+            // Ordena as medidas por data (mais antiga para mais recente)
+            const sortedMeasurements = [...measurements].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (sortedMeasurements.length < 2) {
                 DOM.measurementComparison.innerHTML = `
                     <p class="text-gray-500 text-center">Registre pelo menos duas medições para ver o comparativo.</p>
                 `;
-                DOM.measurementsHistoryTable.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">Nenhuma medição registrada</td></tr>'; // Colspan ajustado
-                return;
+            } else {
+                const latestMeasurement = sortedMeasurements[sortedMeasurements.length - 1];
+                const previousMeasurement = sortedMeasurements[sortedMeasurements.length - 2];
+
+                const formatComparison = (latest, previous, unit) => {
+                    if (latest === null || previous === null || latest === undefined || previous === undefined) {
+                        return '--';
+                    }
+                    const diff = latest - previous;
+                    const sign = diff > 0 ? '+' : '';
+                    const colorClass = diff > 0 ? 'text-red-600' : (diff < 0 ? 'text-green-600' : 'text-gray-700');
+                    return `<span class="${colorClass}">${latest.toFixed(1)}${unit} (${sign}${diff.toFixed(1)}${unit})</span>`;
+                };
+
+                DOM.compareWeight.innerHTML = formatComparison(latestMeasurement.weight, previousMeasurement.weight, 'kg');
+                DOM.compareWaist.innerHTML = formatComparison(latestMeasurement.waist, previousMeasurement.waist, 'cm');
+                DOM.compareAbdomen.innerHTML = formatComparison(latestMeasurement.abdomen, previousMeasurement.abdomen, 'cm');
+                DOM.compareHip.innerHTML = formatComparison(latestMeasurement.hip, previousMeasurement.hip, 'cm');
+                DOM.compareArm.innerHTML = formatComparison(latestMeasurement.arm, previousMeasurement.arm, 'cm');
+                DOM.compareThigh.innerHTML = formatComparison(latestMeasurement.thigh, previousMeasurement.thigh, 'cm');
+                // DOM.compareChest.innerHTML = formatComparison(latestMeasurement.chest, previousMeasurement.chest, 'cm'); // Se mantiver o peitoral
             }
-
-            // Ordena as medidas por data (mais antiga para mais recente)
-            measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            const latestMeasurement = measurements[measurements.length - 1];
-            const previousMeasurement = measurements[measurements.length - 2];
-
-            const formatComparison = (latest, previous, unit) => {
-                if (latest === null || previous === null || latest === undefined || previous === undefined) {
-                    return '--';
-                }
-                const diff = latest - previous;
-                const sign = diff > 0 ? '+' : '';
-                const colorClass = diff > 0 ? 'text-red-600' : (diff < 0 ? 'text-green-600' : 'text-gray-700');
-                return `<span class="${colorClass}">${latest.toFixed(1)}${unit} (${sign}${diff.toFixed(1)}${unit})</span>`;
-            };
-
-            DOM.compareWeight.innerHTML = formatComparison(latestMeasurement.weight, previousMeasurement.weight, 'kg');
-            DOM.compareWaist.innerHTML = formatComparison(latestMeasurement.waist, previousMeasurement.waist, 'cm');
-            DOM.compareAbdomen.innerHTML = formatComparison(latestMeasurement.abdomen, previousMeasurement.abdomen, 'cm');
-            DOM.compareHip.innerHTML = formatComparison(latestMeasurement.hip, previousMeasurement.hip, 'cm');
-            DOM.compareArm.innerHTML = formatComparison(latestMeasurement.arm, previousMeasurement.arm, 'cm');
-            DOM.compareThigh.innerHTML = formatComparison(latestMeasurement.thigh, previousMeasurement.thigh, 'cm');
-            // DOM.compareChest.innerHTML = formatComparison(latestMeasurement.chest, previousMeasurement.chest, 'cm'); // Se mantiver o peitoral
-
+            
             updateMeasurementsTable(); // Atualiza a tabela de histórico
         }
 
@@ -2090,7 +2095,8 @@
                 measurements.push(newMeasurement);
             }
             
-            measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
+            // Não é necessário ordenar aqui, pois updateMeasurementsDisplay já faz isso
+            // measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
             
             updateMeasurementsDisplay(); // Atualiza a exibição numérica
             DOM.measurementsForm.reset();
@@ -2100,18 +2106,25 @@
 
         window.removeMeasurement = function(index) {
             if (confirm('Tem certeza que deseja remover esta medição?')) {
+                // Para remover corretamente, precisamos do índice na lista original (não na lista ordenada para exibição)
+                // A tabela exibe as medições em ordem decrescente de data, então o 'index' passado é o da lista 'sortedMeasurements'
                 const sortedMeasurementsForDisplay = [...measurements].sort((a, b) => new Date(b.date) - new Date(a.date));
                 const measurementToRemove = sortedMeasurementsForDisplay[index];
                 
+                // Encontra o índice original do item a ser removido
                 const originalIndex = measurements.findIndex(m => 
                     m.date === measurementToRemove.date && 
                     m.weight === measurementToRemove.weight &&
-                    m.waist === measurementToRemove.waist 
+                    m.waist === measurementToRemove.waist && // Incluir mais campos para garantir unicidade
+                    m.abdomen === measurementToRemove.abdomen &&
+                    m.hip === measurementToRemove.hip &&
+                    m.arm === measurementToRemove.arm &&
+                    m.thigh === measurementToRemove.thigh
                 );
                 
                 if (originalIndex > -1) {
                     measurements.splice(originalIndex, 1);
-                    updateMeasurementsDisplay(); // Atualiza a exibição numérica
+                    updateMeasurementsDisplay(); // Atualiza a exibição numérica e a tabela
                     saveAllData();
                     showToast('Medição removida com sucesso!', 'success');
                 } else {
@@ -2129,6 +2142,7 @@
             const steps = duration / stepTime;
             const increment = targetPercent / steps;
 
+            // Remove classes de animação e reseta a largura para iniciar a nova animação
             barElement.classList.remove('animate-pulse-custom', 'over-target');
             barElement.style.width = '0%';
 
@@ -2143,6 +2157,7 @@
                     barElement.style.width = `${Math.min(100, currentPercent)}%`;
                     requestAnimationFrame(animate);
                 } else {
+                    // Garante que a barra atinja o valor final exato
                     barElement.style.width = `${Math.min(100, targetPercent)}%`;
                     if (targetPercent >= 100) {
                         barElement.classList.add('animate-pulse-custom');
@@ -2260,13 +2275,21 @@
 
             // Se houver dados de perfil, recalcula e exibe
             if (userData.dailyCalories > 0) {
+                // Simula um clique no botão calcular para re-renderizar os resultados
+                // e garantir que os targets de macros estejam atualizados para o controle diário
                 DOM.calculateBtn.click(); 
+            } else {
+                // Se não houver dados de perfil, garante que os targets sejam 0
+                DOM.targetCalories.textContent = 0;
+                DOM.targetProtein.textContent = 0;
+                DOM.targetCarbs.textContent = 0;
+                DOM.targetFat.textContent = 0;
             }
 
             updateMealCards();
             updateMeasurementsDisplay(); // Chama a nova função de exibição numérica
             updateStarRatingDisplay();
-            activateTab('dados-pessoais');
+            activateTab('dados-pessoais'); // Ativa a primeira aba por padrão
         }
 
         // Garantir que o DOM esteja totalmente carregado antes de inicializar a aplicação
